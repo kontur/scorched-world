@@ -4,7 +4,7 @@
 * generate terrain
 * basic UI for player controls
 * physics for shooting projectiles
-* camera controls
+* camera controls (set camera behind player with mouse interaction for mouse angle tilt)
 * basic opponent AI
 * target hit logic
 

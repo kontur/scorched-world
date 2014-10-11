@@ -12,6 +12,7 @@ $(function() {
 
     player1 = new HumanPlayer();
     //player2 = new Player();
+    player1.enableControls();
 
     player1.init();
     //player2.init();
@@ -22,11 +23,5 @@ $(function() {
     Scene.addPlayer(player1);
     //Scene.addPlayer(player2);
 
-
-    setTimeout(function () {
-
-        Scene.addProjectile(player1.fire());
-
-    }, 1000);
 
 });

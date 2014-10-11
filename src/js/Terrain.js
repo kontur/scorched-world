@@ -28,7 +28,7 @@ Terrain = function() {
         material = new THREE.MeshDepthMaterial();
 
         this.mesh = new THREE.Mesh(geometry, material);
-        this.wires = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x00ff66, wireframe: true, wireframeLinewidth: 2.5 }));
+        this.wires = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x333333, wireframe: true, wireframeLinewidth: 2.5 }));
 
         return this;
     };

@@ -31,11 +31,13 @@ var Scene = (function () {
         this.terrain.generatePlayerPositions(2, scene);
 
         camera.position.z = 60;
+        camera.position.y = 15;
 
         gravity = new Force(new THREE.Vector3(0, -0.015, 0));
 
-        setupMouseInteraction();
-        setupScrollInteraction();
+        //setupMouseInteraction();
+        //setupScrollInteraction();
+
     };
 
 
@@ -52,10 +54,17 @@ var Scene = (function () {
      */
     var addPlayer = function (playerObj) {
         scene.add(playerObj.getMesh());
+        camera.lookAt(playerObj.position);
+
+        $(playerObj).on("PROJECTILE_FIRED", function (e, projectile) {
+            console.log("addPlayer, onPROJECTILE_FIRED", e, projectile);
+            addProjectile(projectile);
+        });
     };
 
 
     var addProjectile = function (projectile) {
+        console.log("Scene.addProjectile()", projectile);
         projectiles.push(projectile);
         scene.add(projectile.obj);
         console.log("Scene.addProjectile", projectiles.length);

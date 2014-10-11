@@ -8,57 +8,170 @@ var Force = function (direction) {
 Force.prototype = {
 
 };
-
-
 function Player() {
 
-}
+    this.position= null; // Vector3
+    this.mesh= null; // Three mesh
+    this.direction= null;
 
-Player.prototype = {
-
-    position: null, // Vector3
-    mesh: null, // Three mesh
-    direction: null,
-
-    init: function () {
+    this.init = function () {
         var geometry = new THREE.IcosahedronGeometry(1, 0);
         var material = new THREE.MeshPhongMaterial({ ambient: 0xff0000, color: 0xff3300, specular: 0x0099ff, shininess: 30, shading: THREE.FlatShading });
         this.mesh = new THREE.Mesh(geometry, material);
         this.obj = new THREE.Object3D();
 
-        var geo = new THREE.CylinderGeometry(0.25, 0.5, 4);
+        var canonH = 2;
+        var geo = new THREE.CylinderGeometry(0.15, 0.5, canonH);
+        geo.applyMatrix(new THREE.Matrix4().makeTranslation(0, canonH / 2, 0));
+
         var mat = new THREE.MeshPhongMaterial({ ambient: 0xff0000, color: 0x00ffff, specular: 0x0099ff, shininess: 30, shading: THREE.FlatShading });
         this.canon = new THREE.Mesh(geo, mat);
 
         this.obj.add(this.mesh);
         this.obj.add(this.canon);
-    },
+        this.canon.rotateX(45 * Math.PI / 180);
+    };
 
-    setPosition: function (v3) {
-        console.log("Player.setPosition", v3);
-        this.position = v3;
 
-        this.obj.translateX(v3.x);
-        this.obj.translateY(v3.y);
-        this.obj.translateZ(v3.z);
-    },
+    /**
+     * set the position of the player
+     * @param vector3
+     */
+    this.setPosition = function (vector3) {
+        console.log("Player.setPosition", vector3);
+        this.position = vector3;
 
-    getMesh: function () {
+        this.obj.translateX(vector3.x);
+        this.obj.translateY(vector3.y);
+        this.obj.translateZ(vector3.z);
+    };
+
+
+    /**
+     * return the composed player object mesh
+     *
+     * @returns {THREE.Object3D|*|Player.obj}
+     */
+    this.getMesh = function () {
         return this.obj;
-    },
+    };
 
-    fire: function () {
+
+    /**
+     * fire a new projectile form the player's current position and rotation
+     *
+     * triggers PROJECTILE_FIRED event
+     *
+     * TODO power of shot
+     */
+    this.fire = function () {
         var projectile = new Projectile();
         console.log("Player.fire()", this.position);
+
+
+
         projectile.direction = new THREE.Vector3(0.5, 0.5, 0);
         projectile.mass = 0.011;
         projectile.setPosition(this.position);
-        return projectile;
-    }
-};
 
+        $(this).trigger("PROJECTILE_FIRED", projectile);
+    };
+
+
+    /**
+     * manipulate the player's canon vertical angle
+     * @param angleChange in radians
+     */
+    this.addAngle = function(angleChange) {
+        console.log("Player.setAngle", angleChange, this.canon.rotation.x);
+        // check the proposed change in angle for the canon is still within 90 deg up and 0 deg forward facing
+        if (this.canon.rotation.x + angleChange > 0 && this.canon.rotation.x + angleChange < Math.PI / 2) {
+            this.canon.rotateX(angleChange);
+        }
+    };
+
+
+    /**
+     * rotates the player canon horizontally
+     * @param rotationChange in radians
+     */
+    this.addRotation = function(rotationChange) {
+        console.log("Player.setRotation", this.obj, this.obj.rotation, this.obj.quaternion);
+        // rotate the whole player object, not just the canon
+        this.obj.rotateOnAxis(new THREE.Vector3(0, 1, 0), rotationChange);
+    };
+
+}
+
+
+/**
+ * Player subclass with input interaction for aiming and firing
+ *
+ * @constructor new HumanPlayer()
+ */
 function HumanPlayer() {
+
+    var that = this;
+    this.controlsEnabled = false;
+    this.enableControls = function () {
+        this.controlsEnabled = true;
+    }
+    this.disableControls = function () {
+        this.controlsEnabled = false;
+    };
+
     Player.call(this);
+
+    setupControls();
+
+
+    function setupControls () {
+        console.log("HumanPlayer.setupControls()");
+        $(window).on("keydown", onKeyUp);
+    }
+
+
+    /**
+     * TODO improve rotating by adding additive rotation speed when key pressed continuously
+     */
+    function onKeyUp(e) {
+        if (!that.controlsEnabled) {
+            return false;
+        }
+        console.log(e.keyCode);
+
+        var rotationStep = 2;
+
+        switch (e.keyCode) {
+            // arrow up
+            case 38:
+                that.addAngle(rotationStep * (Math.PI / 180));
+                break;
+
+            // arrow down
+            case 40:
+                that.addAngle(-rotationStep * (Math.PI / 180));
+                break;
+
+            // arrow left
+            case 37:
+                that.addRotation(-rotationStep * (Math.PI / 180));
+                break;
+
+            // arrow right
+            case 39:
+                that.addRotation(rotationStep * (Math.PI / 180));
+                break;
+
+            // space bar
+            case 32:
+                that.fire();
+                break;
+
+            default:
+                break;
+        }
+    }
 }
 
 HumanPlayer.prototype = new Player();
@@ -138,11 +251,13 @@ var Scene = (function () {
         this.terrain.generatePlayerPositions(2, scene);
 
         camera.position.z = 60;
+        camera.position.y = 15;
 
         gravity = new Force(new THREE.Vector3(0, -0.015, 0));
 
-        setupMouseInteraction();
-        setupScrollInteraction();
+        //setupMouseInteraction();
+        //setupScrollInteraction();
+
     };
 
 
@@ -159,10 +274,17 @@ var Scene = (function () {
      */
     var addPlayer = function (playerObj) {
         scene.add(playerObj.getMesh());
+        camera.lookAt(playerObj.position);
+
+        $(playerObj).on("PROJECTILE_FIRED", function (e, projectile) {
+            console.log("addPlayer, onPROJECTILE_FIRED", e, projectile);
+            addProjectile(projectile);
+        });
     };
 
 
     var addProjectile = function (projectile) {
+        console.log("Scene.addProjectile()", projectile);
         projectiles.push(projectile);
         scene.add(projectile.obj);
         console.log("Scene.addProjectile", projectiles.length);
@@ -254,7 +376,7 @@ Terrain = function() {
         material = new THREE.MeshDepthMaterial();
 
         this.mesh = new THREE.Mesh(geometry, material);
-        this.wires = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x00ff66, wireframe: true, wireframeLinewidth: 2.5 }));
+        this.wires = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x333333, wireframe: true, wireframeLinewidth: 2.5 }));
 
         return this;
     };
@@ -318,6 +440,7 @@ $(function() {
 
     player1 = new HumanPlayer();
     //player2 = new Player();
+    player1.enableControls();
 
     player1.init();
     //player2.init();
@@ -328,11 +451,5 @@ $(function() {
     Scene.addPlayer(player1);
     //Scene.addPlayer(player2);
 
-
-    setTimeout(function () {
-
-        Scene.addProjectile(player1.fire());
-
-    }, 1000);
 
 });
