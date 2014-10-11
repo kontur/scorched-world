@@ -1,11 +1,13 @@
-
+/**
+ * Main scene logic for rendering and organizing all the 3D parts of the game
+ */
 var Scene = (function () {
-
 
     var scene,
         camera,
         renderer,
-        projectiles = [];
+        projectiles = [],
+        player;
 
     /**
      * entry point for setting up the scene and renderer
@@ -60,6 +62,7 @@ var Scene = (function () {
             console.log("addPlayer, onPROJECTILE_FIRED", e, projectile);
             addProjectile(projectile);
         });
+        player = playerObj;
     };
 
 
@@ -96,18 +99,20 @@ var Scene = (function () {
         });
     }
 
-    var i = 0;
+
     function render() {
         requestAnimationFrame(render);
         if (projectiles && projectiles.length) {
             for (p in projectiles) {
                 projectiles[p].applyForce(gravity);
                 projectiles[p].update();
-            }
-            if (i > 200) {
-                projectiles.pop();
-            } else {
-                i++;
+
+                //TODO more complex projectile delete logic based on terrain bounding box
+                if (projectiles[p].position.y < -10) {
+                    scene.remove(projectiles[p].obj);
+                    //TODO don't just empty the array, but pluck this projectile, in case there later are more than 1
+                    projectiles = [];
+                }
             }
         }
         renderer.render(scene, camera);

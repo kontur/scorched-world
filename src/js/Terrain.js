@@ -1,4 +1,9 @@
-
+/**
+ * Terrain class for initializing and generating level terrain
+ *
+ * @returns {{init: Function, generatePlayerPositions: Function}}
+ * @constructor
+ */
 Terrain = function() {
 
     var geometry,

@@ -1,6 +1,5 @@
 /*!  - v - 2014-10-11
 * Copyright (c) 2014 Johannes Neumeier; Licensed  */
-
 var Force = function (direction) {
     this.direction = direction;
 };
@@ -62,17 +61,15 @@ function Player() {
      *
      * triggers PROJECTILE_FIRED event
      *
-     * TODO power of shot
+     * TODO power of projectile
+     * TODO prevent multiple simultaneous projectiles in the air
      */
     this.fire = function () {
         var projectile = new Projectile();
-        console.log("Player.fire()", this.position);
-
-
 
         projectile.direction = new THREE.Vector3(0.5, 0.5, 0);
         projectile.mass = 0.011;
-        projectile.setPosition(this.position);
+        projectile.setPosition(this.position.clone());
 
         $(this).trigger("PROJECTILE_FIRED", projectile);
     };
@@ -176,14 +173,10 @@ function HumanPlayer() {
 
 HumanPlayer.prototype = new Player();
 HumanPlayer.constructor = HumanPlayer;
-
-
 var Projectile = function () {
     var geometry = new THREE.SphereGeometry(0.25, 4, 4);
     var material = new THREE.MeshBasicMaterial({ color: 0xff00ff });
     var mesh = new THREE.Mesh(geometry, material);
-
-    this.id = Math.round(Math.random() * 100000);
 
     this.mass = 0.1;
     this.direction = new THREE.Vector3(0, 0, 0);
@@ -199,33 +192,45 @@ var Projectile = function () {
 };
 
 Projectile.prototype = {
+
+    /**
+     * Apply @param force to this projectiles direction
+     *
+     * @param force
+     */
     applyForce: function (force) {
-        this.direction = this.direction.add(force.direction.multiplyScalar(1 + this.mass));
+        this.direction = this.direction.add(force.direction.clone().multiplyScalar(1 + this.mass));
     },
 
+    /**
+     * Explicitly set the projectiles position
+     *
+     * NOTE: only after adding mesh to scene
+     *
+     * @param position
+     */
     setPosition: function (position) {
         this.position = position;
     },
 
+    /**
+     * Move the projectile after applying movement momentum
+     */
     update: function () {
         this.position = this.position.add(this.direction);
-
-        //console.log("Projectile.update()", this.id, this.position, this.obj.position);
-
         var move = new THREE.Vector3().subVectors(this.position, this.obj.position);
         this.obj.translateX(move.x);
         this.obj.translateY(move.y);
         this.obj.translateZ(move.z);
     }
 };
-
 var Scene = (function () {
-
 
     var scene,
         camera,
         renderer,
-        projectiles = [];
+        projectiles = [],
+        player;
 
     /**
      * entry point for setting up the scene and renderer
@@ -280,6 +285,7 @@ var Scene = (function () {
             console.log("addPlayer, onPROJECTILE_FIRED", e, projectile);
             addProjectile(projectile);
         });
+        player = playerObj;
     };
 
 
@@ -316,18 +322,20 @@ var Scene = (function () {
         });
     }
 
-    var i = 0;
+
     function render() {
         requestAnimationFrame(render);
         if (projectiles && projectiles.length) {
             for (p in projectiles) {
                 projectiles[p].applyForce(gravity);
                 projectiles[p].update();
-            }
-            if (i > 200) {
-                projectiles.pop();
-            } else {
-                i++;
+
+                //TODO more complex projectile delete logic based on terrain bounding box
+                if (projectiles[p].position.y < -10) {
+                    scene.remove(projectiles[p].obj);
+                    //TODO don't just empty the array, but pluck this projectile, in case there later are more than 1
+                    projectiles = [];
+                }
             }
         }
         renderer.render(scene, camera);
@@ -345,7 +353,6 @@ var Scene = (function () {
     };
 
 })();
-
 
 Terrain = function() {
 
@@ -426,7 +433,7 @@ var UI = (function () {
 
 })();
 
-
+var p;
 
 $(function() {
 
@@ -447,6 +454,8 @@ $(function() {
 
     player1.setPosition(Scene.terrain.playerPositions[0]);
     //player2.setPosition(Scene.terrain.playerPositions[1]);
+
+    p = player1;
 
     Scene.addPlayer(player1);
     //Scene.addPlayer(player2);

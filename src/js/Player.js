@@ -57,17 +57,15 @@ function Player() {
      *
      * triggers PROJECTILE_FIRED event
      *
-     * TODO power of shot
+     * TODO power of projectile
+     * TODO prevent multiple simultaneous projectiles in the air
      */
     this.fire = function () {
         var projectile = new Projectile();
-        console.log("Player.fire()", this.position);
-
-
 
         projectile.direction = new THREE.Vector3(0.5, 0.5, 0);
         projectile.mass = 0.011;
-        projectile.setPosition(this.position);
+        projectile.setPosition(this.position.clone());
 
         $(this).trigger("PROJECTILE_FIRED", projectile);
     };

@@ -1,4 +1,4 @@
-
+var p;
 
 $(function() {
 
@@ -19,6 +19,8 @@ $(function() {
 
     player1.setPosition(Scene.terrain.playerPositions[0]);
     //player2.setPosition(Scene.terrain.playerPositions[1]);
+
+    p = player1;
 
     Scene.addPlayer(player1);
     //Scene.addPlayer(player2);
