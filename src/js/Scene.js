@@ -4,10 +4,8 @@ var Scene = (function () {
 
     var scene,
         camera,
-        renderer;
-
-    var cube;
-
+        renderer,
+        projectiles = [];
 
     /**
      * entry point for setting up the scene and renderer
@@ -24,13 +22,6 @@ var Scene = (function () {
         directionalLight.position.set( 0, 1, 0 );
         scene.add( directionalLight );
 
-        /*
-        var geometry = new THREE.BoxGeometry(10, 10, 10);
-        var material = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true });
-        cube = new THREE.Mesh( geometry, material );
-        scene.add( cube );
-        */
-
         this.terrain = new Terrain();
         this.terrain.init();
 
@@ -39,7 +30,9 @@ var Scene = (function () {
 
         this.terrain.generatePlayerPositions(2, scene);
 
-        camera.position.z = 40;
+        camera.position.z = 60;
+
+        gravity = new Force(new THREE.Vector3(0, -0.015, 0));
 
         setupMouseInteraction();
         setupScrollInteraction();
@@ -58,9 +51,15 @@ var Scene = (function () {
      * adding player object representations to the scene
      */
     var addPlayer = function (playerObj) {
-        console.log(playerObj.getMesh().position);
         scene.add(playerObj.getMesh());
-    }
+    };
+
+
+    var addProjectile = function (projectile) {
+        projectiles.push(projectile);
+        scene.add(projectile.obj);
+        console.log("Scene.addProjectile", projectiles.length);
+    };
 
 
     function setupScrollInteraction () {
@@ -81,22 +80,27 @@ var Scene = (function () {
                 mouseY = e.originalEvent.pageY,
                 percentH = mouseX / window.innerWidth,
                 percentV = mouseY / window.innerHeight;
-
-            //console.log(percentH, percentV);
             
             camera.position.y = 10 + (5 * percentV);
-            //camera.rotation.x = -percentV;
             camera.position.x = percentH * 20 - 10;
-
             camera.lookAt(new THREE.Vector3(0, 0, 0));
-            //camera.position.z = 25;
         });
     }
 
-
+    var i = 0;
     function render() {
-        //cube.rotation.y += 0.01;
         requestAnimationFrame(render);
+        if (projectiles && projectiles.length) {
+            for (p in projectiles) {
+                projectiles[p].applyForce(gravity);
+                projectiles[p].update();
+            }
+            if (i > 200) {
+                projectiles.pop();
+            } else {
+                i++;
+            }
+        }
         renderer.render(scene, camera);
     }
 
@@ -107,7 +111,8 @@ var Scene = (function () {
         addPlayer: addPlayer,
         terrain: function () {
             return terrain;
-        }
+        },
+        addProjectile: addProjectile
     };
 
 })();

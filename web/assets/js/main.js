@@ -1,5 +1,13 @@
-/*!  - v - 2014-10-10
+/*!  - v - 2014-10-11
 * Copyright (c) 2014 Johannes Neumeier; Licensed  */
+
+var Force = function (direction) {
+    this.direction = direction;
+};
+
+Force.prototype = {
+
+};
 
 
 function Player() {
@@ -14,7 +22,6 @@ Player.prototype = {
 
     init: function () {
         var geometry = new THREE.IcosahedronGeometry(1, 0);
-        //var material = new THREE.MeshBasicMaterial({ color: 0xff3300, wireframe: true });
         var material = new THREE.MeshPhongMaterial({ ambient: 0xff0000, color: 0xff3300, specular: 0x0099ff, shininess: 30, shading: THREE.FlatShading });
         this.mesh = new THREE.Mesh(geometry, material);
         this.obj = new THREE.Object3D();
@@ -30,40 +37,82 @@ Player.prototype = {
     setPosition: function (v3) {
         console.log("Player.setPosition", v3);
         this.position = v3;
-        //this.mesh.geometry.position = v3;
-        //console.log(this.mesh);
 
         this.obj.translateX(v3.x);
         this.obj.translateY(v3.y);
         this.obj.translateZ(v3.z);
-
-        //var m = new THREE.Matrix4().makeTranslation(v3);
-        //this.mesh.geometry.applyMatrix(m);
-        //this.mesh.geometry.verticesNeedUpdate;
-
-        //this.mesh.geometry.position = v3;
-        //this.mesh.translateX(this.position.x);
-        ////this.mesh.translateY(this.position.y);
-        //this.mesh.translateZ(this.position.y);
-        //this.mesh.translateY(2);
     },
 
     getMesh: function () {
         return this.obj;
+    },
+
+    fire: function () {
+        var projectile = new Projectile();
+        console.log("Player.fire()", this.position);
+        projectile.direction = new THREE.Vector3(0.5, 0.5, 0);
+        projectile.mass = 0.011;
+        projectile.setPosition(this.position);
+        return projectile;
     }
 };
 
+function HumanPlayer() {
+    Player.call(this);
+}
 
+HumanPlayer.prototype = new Player();
+HumanPlayer.constructor = HumanPlayer;
+
+
+var Projectile = function () {
+    var geometry = new THREE.SphereGeometry(0.25, 4, 4);
+    var material = new THREE.MeshBasicMaterial({ color: 0xff00ff });
+    var mesh = new THREE.Mesh(geometry, material);
+
+    this.id = Math.round(Math.random() * 100000);
+
+    this.mass = 0.1;
+    this.direction = new THREE.Vector3(0, 0, 0);
+    this.position = new THREE.Vector3(0, 0, 0);
+
+    //TODO implement drag factor into update
+    this.drag = 0.01;
+
+    this.obj = new THREE.Object3D();
+    this.obj.add(mesh);
+    this.obj.position = new THREE.Vector3(0, 0, 0);
+    console.log("Projectile", this.obj.position);
+};
+
+Projectile.prototype = {
+    applyForce: function (force) {
+        this.direction = this.direction.add(force.direction.multiplyScalar(1 + this.mass));
+    },
+
+    setPosition: function (position) {
+        this.position = position;
+    },
+
+    update: function () {
+        this.position = this.position.add(this.direction);
+
+        //console.log("Projectile.update()", this.id, this.position, this.obj.position);
+
+        var move = new THREE.Vector3().subVectors(this.position, this.obj.position);
+        this.obj.translateX(move.x);
+        this.obj.translateY(move.y);
+        this.obj.translateZ(move.z);
+    }
+};
 
 var Scene = (function () {
 
 
     var scene,
         camera,
-        renderer;
-
-    var cube;
-
+        renderer,
+        projectiles = [];
 
     /**
      * entry point for setting up the scene and renderer
@@ -80,13 +129,6 @@ var Scene = (function () {
         directionalLight.position.set( 0, 1, 0 );
         scene.add( directionalLight );
 
-        /*
-        var geometry = new THREE.BoxGeometry(10, 10, 10);
-        var material = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true });
-        cube = new THREE.Mesh( geometry, material );
-        scene.add( cube );
-        */
-
         this.terrain = new Terrain();
         this.terrain.init();
 
@@ -95,7 +137,9 @@ var Scene = (function () {
 
         this.terrain.generatePlayerPositions(2, scene);
 
-        camera.position.z = 40;
+        camera.position.z = 60;
+
+        gravity = new Force(new THREE.Vector3(0, -0.015, 0));
 
         setupMouseInteraction();
         setupScrollInteraction();
@@ -114,9 +158,15 @@ var Scene = (function () {
      * adding player object representations to the scene
      */
     var addPlayer = function (playerObj) {
-        console.log(playerObj.getMesh().position);
         scene.add(playerObj.getMesh());
-    }
+    };
+
+
+    var addProjectile = function (projectile) {
+        projectiles.push(projectile);
+        scene.add(projectile.obj);
+        console.log("Scene.addProjectile", projectiles.length);
+    };
 
 
     function setupScrollInteraction () {
@@ -137,22 +187,27 @@ var Scene = (function () {
                 mouseY = e.originalEvent.pageY,
                 percentH = mouseX / window.innerWidth,
                 percentV = mouseY / window.innerHeight;
-
-            //console.log(percentH, percentV);
             
             camera.position.y = 10 + (5 * percentV);
-            //camera.rotation.x = -percentV;
             camera.position.x = percentH * 20 - 10;
-
             camera.lookAt(new THREE.Vector3(0, 0, 0));
-            //camera.position.z = 25;
         });
     }
 
-
+    var i = 0;
     function render() {
-        //cube.rotation.y += 0.01;
         requestAnimationFrame(render);
+        if (projectiles && projectiles.length) {
+            for (p in projectiles) {
+                projectiles[p].applyForce(gravity);
+                projectiles[p].update();
+            }
+            if (i > 200) {
+                projectiles.pop();
+            } else {
+                i++;
+            }
+        }
         renderer.render(scene, camera);
     }
 
@@ -163,7 +218,8 @@ var Scene = (function () {
         addPlayer: addPlayer,
         terrain: function () {
             return terrain;
-        }
+        },
+        addProjectile: addProjectile
     };
 
 })();
@@ -175,8 +231,8 @@ Terrain = function() {
         material,
         width = 100,
         height = 100,
-        widthSegments = 10,
-        heightSegments = 10;
+        widthSegments = 30,
+        heightSegments = 30;
 
 
     //init();
@@ -188,26 +244,21 @@ Terrain = function() {
      */
     var init = function () {
         geometry = new THREE.PlaneGeometry(width, height, widthSegments, heightSegments);
-
         for (var v = 0; v < geometry.vertices.length; v++) {
-            geometry.vertices[v].z += Math.random() * 3;
+            geometry.vertices[v].z += Math.random() * 2;
             geometry.vertices[v].x += Math.random() - 0.5;
             geometry.vertices[v].y += Math.random() - 0.5;
         }
         geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
-
         geometry.verticesNeedUpdate = true;
-
         material = new THREE.MeshDepthMaterial();
 
         this.mesh = new THREE.Mesh(geometry, material);
         this.wires = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x00ff66, wireframe: true, wireframeLinewidth: 2.5 }));
-        //this.mesh.rotation.x = -Math.PI / 2;
-
-        //this.playerPositions = generatePlayerPositions(2);
 
         return this;
     };
+
 
     var generatePlayerPositions = function (num, scene) {
         var pos = [];
@@ -217,9 +268,10 @@ Terrain = function() {
         this.playerPositions = pos;
     };
 
+
     var getRandomPlayerPosition = function () {
         return geometry.vertices[Math.floor(Math.random() * geometry.vertices.length)];
-    }
+    };
 
 
     return {
@@ -227,7 +279,7 @@ Terrain = function() {
         generatePlayerPositions: generatePlayerPositions
     };
 
-}
+};
 
 var UI = (function () {
 
@@ -264,16 +316,23 @@ $(function() {
     Scene.init();
     Scene.start();
 
-    player1 = new Player();
-    player2 = new Player();
+    player1 = new HumanPlayer();
+    //player2 = new Player();
 
     player1.init();
-    player2.init();
+    //player2.init();
 
     player1.setPosition(Scene.terrain.playerPositions[0]);
-    player2.setPosition(Scene.terrain.playerPositions[1]);
+    //player2.setPosition(Scene.terrain.playerPositions[1]);
 
     Scene.addPlayer(player1);
-    Scene.addPlayer(player2);
+    //Scene.addPlayer(player2);
+
+
+    setTimeout(function () {
+
+        Scene.addProjectile(player1.fire());
+
+    }, 1000);
 
 });

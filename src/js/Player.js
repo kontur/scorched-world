@@ -12,7 +12,6 @@ Player.prototype = {
 
     init: function () {
         var geometry = new THREE.IcosahedronGeometry(1, 0);
-        //var material = new THREE.MeshBasicMaterial({ color: 0xff3300, wireframe: true });
         var material = new THREE.MeshPhongMaterial({ ambient: 0xff0000, color: 0xff3300, specular: 0x0099ff, shininess: 30, shading: THREE.FlatShading });
         this.mesh = new THREE.Mesh(geometry, material);
         this.obj = new THREE.Object3D();
@@ -28,26 +27,29 @@ Player.prototype = {
     setPosition: function (v3) {
         console.log("Player.setPosition", v3);
         this.position = v3;
-        //this.mesh.geometry.position = v3;
-        //console.log(this.mesh);
 
         this.obj.translateX(v3.x);
         this.obj.translateY(v3.y);
         this.obj.translateZ(v3.z);
-
-        //var m = new THREE.Matrix4().makeTranslation(v3);
-        //this.mesh.geometry.applyMatrix(m);
-        //this.mesh.geometry.verticesNeedUpdate;
-
-        //this.mesh.geometry.position = v3;
-        //this.mesh.translateX(this.position.x);
-        ////this.mesh.translateY(this.position.y);
-        //this.mesh.translateZ(this.position.y);
-        //this.mesh.translateY(2);
     },
 
     getMesh: function () {
         return this.obj;
+    },
+
+    fire: function () {
+        var projectile = new Projectile();
+        console.log("Player.fire()", this.position);
+        projectile.direction = new THREE.Vector3(0.5, 0.5, 0);
+        projectile.mass = 0.011;
+        projectile.setPosition(this.position);
+        return projectile;
     }
 };
 
+function HumanPlayer() {
+    Player.call(this);
+}
+
+HumanPlayer.prototype = new Player();
+HumanPlayer.constructor = HumanPlayer;

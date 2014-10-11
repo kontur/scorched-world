@@ -5,8 +5,8 @@ Terrain = function() {
         material,
         width = 100,
         height = 100,
-        widthSegments = 10,
-        heightSegments = 10;
+        widthSegments = 30,
+        heightSegments = 30;
 
 
     //init();
@@ -18,26 +18,21 @@ Terrain = function() {
      */
     var init = function () {
         geometry = new THREE.PlaneGeometry(width, height, widthSegments, heightSegments);
-
         for (var v = 0; v < geometry.vertices.length; v++) {
-            geometry.vertices[v].z += Math.random() * 3;
+            geometry.vertices[v].z += Math.random() * 2;
             geometry.vertices[v].x += Math.random() - 0.5;
             geometry.vertices[v].y += Math.random() - 0.5;
         }
         geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
-
         geometry.verticesNeedUpdate = true;
-
         material = new THREE.MeshDepthMaterial();
 
         this.mesh = new THREE.Mesh(geometry, material);
         this.wires = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x00ff66, wireframe: true, wireframeLinewidth: 2.5 }));
-        //this.mesh.rotation.x = -Math.PI / 2;
-
-        //this.playerPositions = generatePlayerPositions(2);
 
         return this;
     };
+
 
     var generatePlayerPositions = function (num, scene) {
         var pos = [];
@@ -47,9 +42,10 @@ Terrain = function() {
         this.playerPositions = pos;
     };
 
+
     var getRandomPlayerPosition = function () {
         return geometry.vertices[Math.floor(Math.random() * geometry.vertices.length)];
-    }
+    };
 
 
     return {
@@ -57,4 +53,4 @@ Terrain = function() {
         generatePlayerPositions: generatePlayerPositions
     };
 
-}
+};
