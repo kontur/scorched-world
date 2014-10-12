@@ -32,10 +32,10 @@ var Scene = (function () {
 
         this.terrain.generatePlayerPositions(2, scene);
 
-        camera.position.z = 60;
-        camera.position.y = 15;
+        //camera.position.z = 60;
+        //camera.position.y = 15;
 
-        gravity = new Force(new THREE.Vector3(0, -0.015, 0));
+        gravity = new Force(new THREE.Vector3(0, -0.055, 0));
 
         //setupMouseInteraction();
         //setupScrollInteraction();
@@ -55,7 +55,11 @@ var Scene = (function () {
      * adding player object representations to the scene
      */
     var addPlayer = function (playerObj) {
-        scene.add(playerObj.getMesh());
+        scene.add(playerObj.obj);
+
+        //camera.translateX(playerObj.position.x + 0);
+        //camera.translateZ(playerObj.position.z + 0);
+        camera.position.y = 25;
         camera.lookAt(playerObj.position);
 
         $(playerObj).on("PROJECTILE_FIRED", function (e, projectile) {
@@ -63,6 +67,11 @@ var Scene = (function () {
             addProjectile(projectile);
         });
         player = playerObj;
+
+
+        // DEBUG
+        scene.add(playerObj.firingV);
+        console.log("addPlayer", playerObj.firingV);
     };
 
 
@@ -102,7 +111,9 @@ var Scene = (function () {
 
     function render() {
         requestAnimationFrame(render);
+
         if (projectiles && projectiles.length) {
+            //TODO projectile terrain / player hit detection
             for (p in projectiles) {
                 projectiles[p].applyForce(gravity);
                 projectiles[p].update();

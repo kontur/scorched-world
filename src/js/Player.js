@@ -5,9 +5,11 @@
  */
 function Player() {
 
-    this.position= null; // Vector3
-    this.mesh= null; // Three mesh
-    this.direction= null;
+    this.position = null; // Vector3
+    this.mesh = null; // Three mesh
+    this.direction = null;
+
+    this.firingV = null;
 
     this.init = function () {
         var geometry = new THREE.IcosahedronGeometry(1, 0);
@@ -25,6 +27,7 @@ function Player() {
         this.obj.add(this.mesh);
         this.obj.add(this.canon);
         this.canon.rotateX(45 * Math.PI / 180);
+        this.canon.rotationAutoUpdate;
     };
 
 
@@ -39,16 +42,12 @@ function Player() {
         this.obj.translateX(vector3.x);
         this.obj.translateY(vector3.y);
         this.obj.translateZ(vector3.z);
-    };
 
-
-    /**
-     * return the composed player object mesh
-     *
-     * @returns {THREE.Object3D|*|Player.obj}
-     */
-    this.getMesh = function () {
-        return this.obj;
+        var geom = new THREE.Geometry();
+        geom.vertices.push(this.position);
+        geom.vertices.push(new THREE.Vector3(this.position.x, 10, this.position.z));
+        var mat = new THREE.LineBasicMaterial({ color: 0xff0000 });
+        this.firingV = new THREE.Line(geom, mat);
     };
 
 
@@ -63,8 +62,8 @@ function Player() {
     this.fire = function () {
         var projectile = new Projectile();
 
-        projectile.direction = new THREE.Vector3(0.5, 0.5, 0);
-        projectile.mass = 0.011;
+        projectile.direction = this.getFiringVector(); //new THREE.Vector3(0.5, 0.5, 0);
+        projectile.mass = 0.551;
         projectile.setPosition(this.position.clone());
 
         $(this).trigger("PROJECTILE_FIRED", projectile);
@@ -76,11 +75,13 @@ function Player() {
      * @param angleChange in radians
      */
     this.addAngle = function(angleChange) {
-        console.log("Player.setAngle", angleChange, this.canon.rotation.x);
         // check the proposed change in angle for the canon is still within 90 deg up and 0 deg forward facing
         if (this.canon.rotation.x + angleChange > 0 && this.canon.rotation.x + angleChange < Math.PI / 2) {
             this.canon.rotateX(angleChange);
         }
+
+        //console.log("Player.addAngle()", this.canon.rotation.x);
+        this.getFiringVector();
     };
 
 
@@ -89,10 +90,32 @@ function Player() {
      * @param rotationChange in radians
      */
     this.addRotation = function(rotationChange) {
-        console.log("Player.setRotation", this.obj, this.obj.rotation, this.obj.quaternion);
         // rotate the whole player object, not just the canon
         this.obj.rotateOnAxis(new THREE.Vector3(0, 1, 0), rotationChange);
+        //console.log("Player.addRotation", this.obj.rotation.y);
+        this.getFiringVector();
     };
+
+
+    this.getFiringVector = function () {
+        // extracting direction from object matrix: https://github.com/mrdoob/three.js/issues/1606
+
+        var matrix = new THREE.Matrix4();
+        matrix = matrix.extractRotation( this.obj.matrix );
+
+        var direction = new THREE.Vector3( 0, 0, 1 );
+        direction = direction.applyMatrix4(matrix);
+        direction.y = 1;
+        direction= direction.multiplyScalar(5);
+
+        var geom = new THREE.Geometry();
+        geom.vertices.push(this.position);
+        geom.vertices.push(this.position.clone().add(direction));
+        var mat = new THREE.LineBasicMaterial({ color: 0xff0000 });
+        this.firingV.add(new THREE.Line(geom, mat));
+
+        return direction;
+    }
 
 }
 
@@ -108,7 +131,7 @@ function HumanPlayer() {
     this.controlsEnabled = false;
     this.enableControls = function () {
         this.controlsEnabled = true;
-    }
+    };
     this.disableControls = function () {
         this.controlsEnabled = false;
     };
@@ -131,9 +154,8 @@ function HumanPlayer() {
         if (!that.controlsEnabled) {
             return false;
         }
-        console.log(e.keyCode);
 
-        var rotationStep = 2;
+        var rotationStep = 5;
 
         switch (e.keyCode) {
             // arrow up
