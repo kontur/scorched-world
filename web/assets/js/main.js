@@ -37,8 +37,10 @@ function Player() {
     this.position = null; // Vector3
     this.mesh = null; // Three mesh
     this.direction = null;
-
     this.firingV = null;
+
+    this.fireForce = 0;
+    this.fireButtonTimeout = null;
 
     this.init = function () {
         var geometry = new THREE.IcosahedronGeometry(1, 0);
@@ -85,14 +87,18 @@ function Player() {
      *
      * triggers PROJECTILE_FIRED event
      *
-     * TODO power of projectile
+     * @param force float 0-1
+     *
      * TODO prevent multiple simultaneous projectiles in the air
+     * TODO projectile mass has no effect
      */
-    this.fire = function () {
+    this.fire = function (force) {
         var projectile = new Projectile();
 
-        projectile.direction = this.getFiringVector(); //new THREE.Vector3(0.5, 0.5, 0);
-        projectile.mass = 0.551;
+        console.log("Player.fire()", force);
+
+        projectile.direction = this.getFiringVector().multiplyScalar(force); //new THREE.Vector3(0.5, 0.5, 0);
+        projectile.mass = 0.151;
         projectile.setPosition(this.position.clone());
 
         $(this).trigger("PROJECTILE_FIRED", projectile);
@@ -131,8 +137,12 @@ function Player() {
      *
      * @returns {THREE.Vector3}
      */
-    this.getFiringVector = function () {
+    this.getFiringVector = function (forceIndicator) {
         // extracting direction from object matrix: https://github.com/mrdoob/three.js/issues/1606
+
+        if (!forceIndicator) {
+            forceIndicator = 1;
+        }
 
         // first extract the horizontal rotation of the main player object
         var rotationH = new THREE.Matrix4();
@@ -162,12 +172,11 @@ function Player() {
         // dev visualization only:
         var g = new THREE.Geometry();
         g.vertices.push(this.position);
-        g.vertices.push(this.position.clone().add(direction.clone().multiplyScalar(5)));
-        var m = new THREE.LineBasicMaterial({ color: 0x004400 });
+        g.vertices.push(this.position.clone().add(direction.clone().multiplyScalar(1 + forceIndicator * 5)));
+        var m = new THREE.LineBasicMaterial({ color: "rgb(" + Math.round(forceIndicator * 255) + ", 0, 0)" });
         this.firingV.add(new THREE.Line(g, m));
 
-        console.log(this.firingV.children.length);
-        while (this.firingV.children.length > 10) {
+        while (this.firingV.children.length > 1) {
             this.firingV.children.shift();
         }
 
@@ -206,14 +215,15 @@ function HumanPlayer() {
 
     function setupControls () {
         console.log("HumanPlayer.setupControls()");
-        $(window).on("keydown", onKeyUp);
+        $(window).on("keydown", onKeyDown);
+        $(window).on("keyup", onKeyUp);
     }
 
 
     /**
      * TODO improve rotating by adding additive rotation speed when key pressed continuously
      */
-    function onKeyUp(e) {
+    function onKeyDown(e) {
         if (!that.controlsEnabled) {
             return false;
         }
@@ -222,33 +232,60 @@ function HumanPlayer() {
 
         switch (e.keyCode) {
             // arrow up
-            case 38:
+            case 40:
                 that.addAngle(rotationStep * (Math.PI / 180));
                 break;
 
             // arrow down
-            case 40:
+            case 38:
                 that.addAngle(-rotationStep * (Math.PI / 180));
                 break;
 
             // arrow left
-            case 37:
+            case 39:
                 that.addRotation(-rotationStep * (Math.PI / 180));
                 break;
 
             // arrow right
-            case 39:
+            case 37:
                 that.addRotation(rotationStep * (Math.PI / 180));
                 break;
 
             // space bar
             case 32:
-                that.fire();
+                if (!that.fireButtonTimeout) {
+                    that.fireButtonTimeout = setTimeout(fireButtonDown, 5);
+                }
                 break;
 
             default:
                 break;
         }
+    }
+
+    function onKeyUp(e) {
+        if (!that.controlsEnabled) {
+            return false;
+        }
+
+        if (e.keyCode == "32") {
+            // spacebar was released
+
+            clearTimeout(that.fireButtonTimeout);
+            that.fire(that.fireForce / 100);
+            that.fireForce = 0;
+            that.fireButtonTimeout = false;
+        }
+    }
+
+
+    function fireButtonDown() {
+        that.fireForce++;
+        if (that.fireForce > 100) {
+            that.fireForce = 100;
+        }
+        that.fireButtonTimeout = setTimeout(fireButtonDown, 5);
+        that.getFiringVector(Math.min(100, that.fireForce) / 100);
     }
 }
 
@@ -398,7 +435,6 @@ var Scene = (function () {
         camera.lookAt(playerObj.position);
 
         $(playerObj).on("PROJECTILE_FIRED", function (e, projectile) {
-            console.log("addPlayer, onPROJECTILE_FIRED", e, projectile);
             addProjectile(projectile);
         });
         player = playerObj;
@@ -414,7 +450,7 @@ var Scene = (function () {
         console.log("Scene.addProjectile()", projectile);
         projectiles.push(projectile);
         scene.add(projectile.obj);
-        console.log("Scene.addProjectile", projectiles.length);
+        console.log("Scene.addProjectile()", projectiles.length);
     };
 
 

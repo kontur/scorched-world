@@ -66,7 +66,6 @@ var Scene = (function () {
         camera.lookAt(playerObj.position);
 
         $(playerObj).on("PROJECTILE_FIRED", function (e, projectile) {
-            console.log("addPlayer, onPROJECTILE_FIRED", e, projectile);
             addProjectile(projectile);
         });
         player = playerObj;
@@ -82,7 +81,7 @@ var Scene = (function () {
         console.log("Scene.addProjectile()", projectile);
         projectiles.push(projectile);
         scene.add(projectile.obj);
-        console.log("Scene.addProjectile", projectiles.length);
+        console.log("Scene.addProjectile()", projectiles.length);
     };
 
 
