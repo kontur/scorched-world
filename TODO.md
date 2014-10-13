@@ -20,3 +20,14 @@
 * aiming guide vectors / trajectories
 * player names / life hovering above player objects
 
+
+##Game flow
+* As long as neither player is below 0 life:
+    * Takes turns, a turn consists of:
+    * Camera zoom to player
+    * Player aims
+    * Player fires
+        * Calculate player damage, then either:
+            * Next players turn
+            * End game with winner
+            [* Draw if both players have < 0 life]

@@ -2,24 +2,65 @@
  * General high-level interface for controlling the game
  */
 var Game = (function () {
-    var start = function () {
-        var player1, player2;
+
+    var players;
+    var currentTurn; // int from 0 - players.length identifying the current players turn
+
+
+    /**
+     * Start a new game with given players
+     *
+     * @param _players array of player objects
+     */
+    var start = function (_players) {
+        players = _players;
+
         Scene.init();
         Scene.start();
 
-        player1 = new HumanPlayer({ color: 0x00ff00});
-        player2 = new AIPlayer({ color: 0xff6600 });
-        player1.enableControls();
+        for (p in players) {
+            players[p].init();
+            players[p].setPosition(Scene.getTerrain().playerPositions[p]);
+            Scene.addPlayer(players[p]);
+        }
 
-        player1.init();
-        player2.init();
+        currentTurn = 0;
 
-        player1.setPosition(Scene.getTerrain().playerPositions[0]);
-        player2.setPosition(Scene.getTerrain().playerPositions[1]);
 
-        Scene.addPlayer(player1);
-        Scene.addPlayer(player2);
+        nextTurn();
     };
+
+
+    function nextTurn() {
+        console.log("Game.nextTurn()", currentTurn, players[currentTurn].isHuman);
+
+        $(window).on("PROJECTILE_IMPACT", updateDamage);
+
+        if (players[currentTurn].isHuman) {
+            players[currentTurn].enableControls();
+        } else {
+            players[currentTurn].fire(1);
+        }
+    }
+
+
+    function updateDamage() {
+        console.log("Game.updateDamage()");
+        $(window).off("PROJECTILE_IMPACT", updateDamage);
+
+        // if no winner
+        if (true) {
+            if (players[currentTurn].isHuman) {
+                players[currentTurn].disableControls();
+            }
+            currentTurn++;
+            if (currentTurn >= players.length) {
+                currentTurn = 0;
+            }
+            nextTurn();
+        }
+    }
+
 
     return {
         start: start,

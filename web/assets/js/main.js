@@ -88,24 +88,65 @@ Force.prototype = {
 
 };
 var Game = (function () {
-    var start = function () {
-        var player1, player2;
+
+    var players;
+    var currentTurn; // int from 0 - players.length identifying the current players turn
+
+
+    /**
+     * Start a new game with given players
+     *
+     * @param _players array of player objects
+     */
+    var start = function (_players) {
+        players = _players;
+
         Scene.init();
         Scene.start();
 
-        player1 = new HumanPlayer({ color: 0x00ff00});
-        player2 = new AIPlayer({ color: 0xff6600 });
-        player1.enableControls();
+        for (p in players) {
+            players[p].init();
+            players[p].setPosition(Scene.getTerrain().playerPositions[p]);
+            Scene.addPlayer(players[p]);
+        }
 
-        player1.init();
-        player2.init();
+        currentTurn = 0;
 
-        player1.setPosition(Scene.getTerrain().playerPositions[0]);
-        player2.setPosition(Scene.getTerrain().playerPositions[1]);
 
-        Scene.addPlayer(player1);
-        Scene.addPlayer(player2);
+        nextTurn();
     };
+
+
+    function nextTurn() {
+        console.log("Game.nextTurn()", currentTurn, players[currentTurn].isHuman);
+
+        $(window).on("PROJECTILE_IMPACT", updateDamage);
+
+        if (players[currentTurn].isHuman) {
+            players[currentTurn].enableControls();
+        } else {
+            players[currentTurn].fire(1);
+        }
+    }
+
+
+    function updateDamage() {
+        console.log("Game.updateDamage()");
+        $(window).off("PROJECTILE_IMPACT", updateDamage);
+
+        // if no winner
+        if (true) {
+            if (players[currentTurn].isHuman) {
+                players[currentTurn].disableControls();
+            }
+            currentTurn++;
+            if (currentTurn >= players.length) {
+                currentTurn = 0;
+            }
+            nextTurn();
+        }
+    }
+
 
     return {
         start: start,
@@ -113,7 +154,6 @@ var Game = (function () {
     };
 })();
 function Player(options) {
-    console.log("Player()");
 
     var defaults = {
         color: 0xffffff
@@ -188,7 +228,7 @@ function Player(options) {
 
         console.log("Player.fire()", force);
 
-        projectile.direction = this.getindicatorector().multiplyScalar(force); //new THREE.Vector3(0.5, 0.5, 0);
+        projectile.direction = this.getIndicator().multiplyScalar(force); //new THREE.Vector3(0.5, 0.5, 0);
         projectile.mass = 0.151;
         projectile.setPosition(this.position.clone());
 
@@ -207,7 +247,7 @@ function Player(options) {
         }
 
         //console.log("Player.addAngle()", this.canon.rotation.x);
-        this.getindicatorector();
+        this.getIndicator();
     };
 
 
@@ -219,7 +259,7 @@ function Player(options) {
         // rotate the whole player object, not just the canon
         this.obj.rotateOnAxis(new THREE.Vector3(0, 1, 0), rotationChange);
         //console.log("Player.addRotation", this.obj.rotation.y);
-        this.getindicatorector();
+        this.getIndicator();
     };
 
 
@@ -228,7 +268,7 @@ function Player(options) {
      *
      * @returns {THREE.Vector3}
      */
-    this.getindicatorector = function (forceIndicator) {
+    this.getIndicator = function (forceIndicator) {
         // extracting direction from object matrix: https://github.com/mrdoob/three.js/issues/1606
 
         if (!forceIndicator) {
@@ -292,12 +332,15 @@ function HumanPlayer(options) {
     console.log("HumanPlayer()");
 
     var that = this;
+    this.isHuman = true;
     this.controlsEnabled = false;
     this.enableControls = function () {
         this.controlsEnabled = true;
+        console.log("Player controls enabled");
     };
     this.disableControls = function () {
         this.controlsEnabled = false;
+        console.log("Player controls disabled");
     };
 
     Player.call(this, options);
@@ -377,7 +420,7 @@ function HumanPlayer(options) {
             that.fireForce = 100;
         }
         that.fireButtonTimeout = setTimeout(fireButtonDown, 5);
-        that.getindicatorector(Math.min(100, that.fireForce) / 100);
+        that.getIndicator(Math.min(100, that.fireForce) / 100);
     }
 }
 
@@ -385,9 +428,19 @@ HumanPlayer.prototype = new Player();
 HumanPlayer.constructor = HumanPlayer;
 
 
-
+/**
+ *
+ * @param options
+ * @constructor
+ *
+ * TODO player AI
+ * TODO player AI difficulty
+ * TODO automated aiming and firing animations
+ */
 function AIPlayer(options) {
     Player.call(this, options);
+
+    this.isHuman = false;
 
 };
 
@@ -572,6 +625,10 @@ var Scene = (function () {
                     terrain.showImpact(projectiles[p].getPlaneCollision()[0]);
                     scene.remove(projectiles[p].obj);
                     projectiles = [];
+
+                    // TODO BAD practise to have this event trigger on window :/
+                    // maybe need to make Scene a object after all
+                    $(window).trigger("PROJECTILE_IMPACT");
                 }
 
                 //TODO more complex projectile delete logic based on terrain bounding box
@@ -739,6 +796,13 @@ var Utils = (function () {
 }());
 
 $(function() {
+
     UI.init();
-    Game.start();
+
+    var players = [
+        new HumanPlayer({ color: 0x00ff00, name: "Foobar"}),
+        new AIPlayer({ color: 0xff6600, difficulty: 0, name: "Robert the Robot" })
+    ];
+    Game.start(players);
+
 });

@@ -101,6 +101,10 @@ var Scene = (function () {
                     terrain.showImpact(projectiles[p].getPlaneCollision()[0]);
                     scene.remove(projectiles[p].obj);
                     projectiles = [];
+
+                    // TODO BAD practise to have this event trigger on window :/
+                    // maybe need to make Scene a object after all
+                    $(window).trigger("PROJECTILE_IMPACT");
                 }
 
                 //TODO more complex projectile delete logic based on terrain bounding box

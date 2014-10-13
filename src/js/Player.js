@@ -4,7 +4,6 @@
  * @constructor new Player()
  */
 function Player(options) {
-    console.log("Player()");
 
     var defaults = {
         color: 0xffffff
@@ -79,7 +78,7 @@ function Player(options) {
 
         console.log("Player.fire()", force);
 
-        projectile.direction = this.getindicatorector().multiplyScalar(force); //new THREE.Vector3(0.5, 0.5, 0);
+        projectile.direction = this.getIndicator().multiplyScalar(force); //new THREE.Vector3(0.5, 0.5, 0);
         projectile.mass = 0.151;
         projectile.setPosition(this.position.clone());
 
@@ -98,7 +97,7 @@ function Player(options) {
         }
 
         //console.log("Player.addAngle()", this.canon.rotation.x);
-        this.getindicatorector();
+        this.getIndicator();
     };
 
 
@@ -110,7 +109,7 @@ function Player(options) {
         // rotate the whole player object, not just the canon
         this.obj.rotateOnAxis(new THREE.Vector3(0, 1, 0), rotationChange);
         //console.log("Player.addRotation", this.obj.rotation.y);
-        this.getindicatorector();
+        this.getIndicator();
     };
 
 
@@ -119,7 +118,7 @@ function Player(options) {
      *
      * @returns {THREE.Vector3}
      */
-    this.getindicatorector = function (forceIndicator) {
+    this.getIndicator = function (forceIndicator) {
         // extracting direction from object matrix: https://github.com/mrdoob/three.js/issues/1606
 
         if (!forceIndicator) {
@@ -183,12 +182,15 @@ function HumanPlayer(options) {
     console.log("HumanPlayer()");
 
     var that = this;
+    this.isHuman = true;
     this.controlsEnabled = false;
     this.enableControls = function () {
         this.controlsEnabled = true;
+        console.log("Player controls enabled");
     };
     this.disableControls = function () {
         this.controlsEnabled = false;
+        console.log("Player controls disabled");
     };
 
     Player.call(this, options);
@@ -268,7 +270,7 @@ function HumanPlayer(options) {
             that.fireForce = 100;
         }
         that.fireButtonTimeout = setTimeout(fireButtonDown, 5);
-        that.getindicatorector(Math.min(100, that.fireForce) / 100);
+        that.getIndicator(Math.min(100, that.fireForce) / 100);
     }
 }
 
@@ -276,9 +278,19 @@ HumanPlayer.prototype = new Player();
 HumanPlayer.constructor = HumanPlayer;
 
 
-
+/**
+ *
+ * @param options
+ * @constructor
+ *
+ * TODO player AI
+ * TODO player AI difficulty
+ * TODO automated aiming and firing animations
+ */
 function AIPlayer(options) {
     Player.call(this, options);
+
+    this.isHuman = false;
 
 };
 
