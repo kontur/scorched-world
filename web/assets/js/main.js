@@ -7,6 +7,31 @@ var Force = function (direction) {
 Force.prototype = {
 
 };
+var Game = (function () {
+    var start = function () {
+        var player1, player2;
+        Scene.init();
+        Scene.start();
+
+        player1 = new HumanPlayer();
+        //player2 = new Player();
+        player1.enableControls();
+
+        player1.init();
+        //player2.init();
+
+        player1.setPosition(Scene.getTerrain().playerPositions[0]);
+        //player2.setPosition(Scene.terrain.playerPositions[1]);
+
+        Scene.addPlayer(player1);
+        //Scene.addPlayer(player2);
+    };
+
+    return {
+        start: start,
+        reset: start
+    };
+})();
 function Player() {
 
     this.position = null; // Vector3
@@ -135,11 +160,9 @@ function Player() {
 
 
         // dev visualization only:
-
-        direction = direction.multiplyScalar(5);
         var g = new THREE.Geometry();
         g.vertices.push(this.position);
-        g.vertices.push(this.position.clone().add(direction));
+        g.vertices.push(this.position.clone().add(direction.clone().multiplyScalar(5)));
         var m = new THREE.LineBasicMaterial({ color: 0x004400 });
         this.firingV.add(new THREE.Line(g, m));
 
@@ -236,6 +259,12 @@ var Projectile = function () {
     var material = new THREE.MeshBasicMaterial({ color: 0xff00ff });
     var mesh = new THREE.Mesh(geometry, material);
 
+    // collision check helpers
+    // make reusable raycasting objects so they don't have to be recreated every frame
+    var lastResult = null;
+    var raycasterDirection = new THREE.Vector3(0, -1, 0);
+    var raycaster = new THREE.Raycaster(this.position, raycasterDirection);
+
     this.mass = 0.1;
     this.direction = new THREE.Vector3(0, 0, 0);
     this.position = new THREE.Vector3(0, 0, 0);
@@ -246,19 +275,18 @@ var Projectile = function () {
     this.obj = new THREE.Object3D();
     this.obj.add(mesh);
     this.obj.position = new THREE.Vector3(0, 0, 0);
-    console.log("Projectile", this.obj.position);
-};
 
-Projectile.prototype = {
+
 
     /**
      * Apply @param force to this projectiles direction
      *
      * @param force
      */
-    applyForce: function (force) {
+    this.applyForce = function (force) {
         this.direction = this.direction.add(force.direction.clone().multiplyScalar(1 + this.mass));
-    },
+    };
+
 
     /**
      * Explicitly set the projectiles position
@@ -267,28 +295,53 @@ Projectile.prototype = {
      *
      * @param position
      */
-    setPosition: function (position) {
+    this.setPosition = function (position) {
         this.position = position;
-    },
+    };
+
 
     /**
      * Move the projectile after applying movement momentum
      */
-    update: function () {
+    this.update = function () {
         this.position = this.position.add(this.direction);
         var move = new THREE.Vector3().subVectors(this.position, this.obj.position);
         this.obj.translateX(move.x);
         this.obj.translateY(move.y);
         this.obj.translateZ(move.z);
-    }
+    };
+
+
+    this.checkPlaneCollision = function (plane) {
+        // update the raycaster position to case a ray straight down from the current projectile position
+        raycaster.set(this.position, raycasterDirection);
+
+        // if the ray hit something the projectile is still above the surface, no hit, but store the lastResult
+        var test = raycaster.intersectObject(plane);
+
+        if (test.length) {
+            lastResult = test;
+            return false;
+        } else {
+            return true;
+        }
+    };
+
+
+    this.getPlaneCollision = function () {
+        return lastResult ? lastResult : false;
+    };
 };
+
 var Scene = (function () {
 
     var scene,
         camera,
         renderer,
-        projectiles = [],
-        player;
+        projectiles,
+        player,
+        terrain;
+
 
     /**
      * entry point for setting up the scene and renderer
@@ -305,18 +358,19 @@ var Scene = (function () {
         directionalLight.position.set( 0, 1, 0 );
         scene.add( directionalLight );
 
-        this.terrain = new Terrain();
-        this.terrain.init();
-
-        //scene.add(this.terrain.mesh);
-        scene.add(this.terrain.wires);
-
-        this.terrain.generatePlayerPositions(2, scene);
+        // create new terrain and player positions
+        // order matters
+        terrain = new Terrain();
+        terrain.init();
+        scene.add(terrain.obj);
+        terrain.generatePlayerPositions(2, scene);
 
         //camera.position.z = 60;
         //camera.position.y = 15;
 
         gravity = new Force(new THREE.Vector3(0, -0.055, 0));
+
+        projectiles = [];
 
         //setupMouseInteraction();
         //setupScrollInteraction();
@@ -399,12 +453,19 @@ var Scene = (function () {
                 projectiles[p].applyForce(gravity);
                 projectiles[p].update();
 
-                //TODO more complex projectile delete logic based on terrain bounding box
-                if (projectiles[p].position.y < -10) {
+
+                if (projectiles[p].checkPlaneCollision(terrain.objForHittest)) {
+                    terrain.showImpact(projectiles[p].getPlaneCollision()[0]);
                     scene.remove(projectiles[p].obj);
-                    //TODO don't just empty the array, but pluck this projectile, in case there later are more than 1
                     projectiles = [];
                 }
+
+                //TODO more complex projectile delete logic based on terrain bounding box
+                //if (projectiles[p].position.y < -10) {
+                //    scene.remove(projectiles[p].obj);
+                //    //TODO don't just empty the array, but pluck this projectile, in case there later are more than 1
+                //    projectiles = [];
+                //}
             }
         }
         renderer.render(scene, camera);
@@ -415,22 +476,25 @@ var Scene = (function () {
         init: init,
         start: start,
         addPlayer: addPlayer,
-        terrain: function () {
+        addProjectile: addProjectile,
+        getTerrain: function () {
             return terrain;
-        },
-        addProjectile: addProjectile
+        }
     };
 
 })();
 
 Terrain = function() {
 
-    var geometry,
-        material,
-        width = 100,
+    var width = 100,
         height = 100,
         widthSegments = 30,
-        heightSegments = 30;
+        heightSegments = 30,
+        geometry, // the main plain
+
+        shaded,
+        wire,
+        effects;
 
 
     //init();
@@ -440,7 +504,7 @@ Terrain = function() {
      *
      * @returns {THREE.Mesh}
      */
-    var init = function () {
+    this.init = function () {
         geometry = new THREE.PlaneGeometry(width, height, widthSegments, heightSegments);
         for (var v = 0; v < geometry.vertices.length; v++) {
             geometry.vertices[v].z += Math.random() * 2;
@@ -449,16 +513,31 @@ Terrain = function() {
         }
         geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
         geometry.verticesNeedUpdate = true;
-        material = new THREE.MeshDepthMaterial();
+        var material = new THREE.MeshDepthMaterial();
 
-        this.mesh = new THREE.Mesh(geometry, material);
-        this.wires = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x333333, wireframe: true, wireframeLinewidth: 2.5 }));
+        this.obj = new THREE.Object3D();
 
-        return this;
+        shaded = new THREE.Mesh(geometry, material);
+        shaded.userData = { name: "shaded" };
+        wire = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x333333, wireframe: true, wireframeLinewidth: 2.5 }));
+        wire.userData.name = "wire";
+        effects = new THREE.Object3D();
+        effects.userData.name = "effects";
+
+        this.obj.add(shaded);
+        this.obj.add(wire);
+        this.obj.add(effects);
+
+        // provide public reference to an object to be used for hittests
+        // this could conceivably be a simplified geometry of the rendered geometry but for now is just a reference
+        // to var shaded
+        //this.objForHittest = Utils.Object3DgetChildByName(this.obj, "shaded");
+        this.objForHittest = shaded;
     };
 
 
-    var generatePlayerPositions = function (num, scene) {
+    //TODO better generation of player positions; minimum distance, centerish positions etc
+    this.generatePlayerPositions = function (num, scene) {
         var pos = [];
         for (var i = 0; i < num; i++) {
             pos.push(getRandomPlayerPosition());
@@ -466,16 +545,24 @@ Terrain = function() {
         this.playerPositions = pos;
     };
 
-
-    var getRandomPlayerPosition = function () {
+    // private helper function
+    function getRandomPlayerPosition() {
         return geometry.vertices[Math.floor(Math.random() * geometry.vertices.length)];
     };
 
 
-    return {
-        init: init,
-        generatePlayerPositions: generatePlayerPositions
-    };
+    /**
+     * Visualize the impact made by a projectile hitting the ground at @param intersectResult
+     *
+     * @param intersectResult - Object returned by THREE.Raycaster.intersectObject
+     */
+    this.showImpact = function (intersectResult) {
+        var geometry = new THREE.SphereGeometry(1, 4, 4);
+        geometry.applyMatrix(new THREE.Matrix4().setPosition(intersectResult.point));
+        var material = new THREE.MeshBasicMaterial({ color: 0xff3300 });
+        var mesh = new THREE.Mesh(geometry, material);
+        Utils.Object3DgetChildByName(this.obj, "effects").add(mesh);
+    }
 
 };
 
@@ -485,9 +572,12 @@ var UI = (function () {
         $(window).on("resize", onResize);
         onResize();
         console.log("hello ui init");
+
+        $("#ui-reset-scene").on("click", resetScene);
     };
 
-    function onResize(){
+    //TODO this resizing doesn't really work yet as intended; it stretches the scene
+    function onResize() {
         console.log("hello resize");
         var w = $(window).width();
         var h = $(window).height();
@@ -496,38 +586,46 @@ var UI = (function () {
         $("#gamecanvas").css("height", h + "px");
     }
 
+
+    function resetScene() {
+        Game.reset();
+    }
+
     return {
         init: init
     };
 
 })();
 
-var p;
+var Utils = (function () {
+
+    // public methods
+    return {
+
+        /**
+         * Helper to find a specific child of a THREE.Object3D by it's userData.name attribute
+         *
+         * @param object3d is a THREE.Object3D
+         * @param name String
+         * @returns THREE.Object3d or false
+         *
+         * TODO implement recursive search and recursive depth
+         */
+        Object3DgetChildByName: function (object3d, name) {
+            console.log(object3d, name);
+            for (child in object3d.children) {
+                if (object3d.children[child].userData && object3d.children[child].userData.name &&
+                    object3d.children[child].userData.name == name)
+                {
+                    return object3d.children[child];
+                }
+            }
+            return false;
+        }
+    };
+}());
 
 $(function() {
-
-    var player1, player2;
-
-
     UI.init();
-
-    Scene.init();
-    Scene.start();
-
-    player1 = new HumanPlayer();
-    //player2 = new Player();
-    player1.enableControls();
-
-    player1.init();
-    //player2.init();
-
-    player1.setPosition(Scene.terrain.playerPositions[0]);
-    //player2.setPosition(Scene.terrain.playerPositions[1]);
-
-    p = player1;
-
-    Scene.addPlayer(player1);
-    //Scene.addPlayer(player2);
-
-
+    Game.start();
 });

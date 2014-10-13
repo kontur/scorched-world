@@ -8,6 +8,12 @@ var Projectile = function () {
     var material = new THREE.MeshBasicMaterial({ color: 0xff00ff });
     var mesh = new THREE.Mesh(geometry, material);
 
+    // collision check helpers
+    // make reusable raycasting objects so they don't have to be recreated every frame
+    var lastResult = null;
+    var raycasterDirection = new THREE.Vector3(0, -1, 0);
+    var raycaster = new THREE.Raycaster(this.position, raycasterDirection);
+
     this.mass = 0.1;
     this.direction = new THREE.Vector3(0, 0, 0);
     this.position = new THREE.Vector3(0, 0, 0);
@@ -18,19 +24,18 @@ var Projectile = function () {
     this.obj = new THREE.Object3D();
     this.obj.add(mesh);
     this.obj.position = new THREE.Vector3(0, 0, 0);
-    console.log("Projectile", this.obj.position);
-};
 
-Projectile.prototype = {
+
 
     /**
      * Apply @param force to this projectiles direction
      *
      * @param force
      */
-    applyForce: function (force) {
+    this.applyForce = function (force) {
         this.direction = this.direction.add(force.direction.clone().multiplyScalar(1 + this.mass));
-    },
+    };
+
 
     /**
      * Explicitly set the projectiles position
@@ -39,18 +44,40 @@ Projectile.prototype = {
      *
      * @param position
      */
-    setPosition: function (position) {
+    this.setPosition = function (position) {
         this.position = position;
-    },
+    };
+
 
     /**
      * Move the projectile after applying movement momentum
      */
-    update: function () {
+    this.update = function () {
         this.position = this.position.add(this.direction);
         var move = new THREE.Vector3().subVectors(this.position, this.obj.position);
         this.obj.translateX(move.x);
         this.obj.translateY(move.y);
         this.obj.translateZ(move.z);
-    }
+    };
+
+
+    this.checkPlaneCollision = function (plane) {
+        // update the raycaster position to case a ray straight down from the current projectile position
+        raycaster.set(this.position, raycasterDirection);
+
+        // if the ray hit something the projectile is still above the surface, no hit, but store the lastResult
+        var test = raycaster.intersectObject(plane);
+
+        if (test.length) {
+            lastResult = test;
+            return false;
+        } else {
+            return true;
+        }
+    };
+
+
+    this.getPlaneCollision = function () {
+        return lastResult ? lastResult : false;
+    };
 };

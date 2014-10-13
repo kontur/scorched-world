@@ -6,8 +6,10 @@ var Scene = (function () {
     var scene,
         camera,
         renderer,
-        projectiles = [],
-        player;
+        projectiles,
+        player,
+        terrain;
+
 
     /**
      * entry point for setting up the scene and renderer
@@ -24,18 +26,19 @@ var Scene = (function () {
         directionalLight.position.set( 0, 1, 0 );
         scene.add( directionalLight );
 
-        this.terrain = new Terrain();
-        this.terrain.init();
-
-        //scene.add(this.terrain.mesh);
-        scene.add(this.terrain.wires);
-
-        this.terrain.generatePlayerPositions(2, scene);
+        // create new terrain and player positions
+        // order matters
+        terrain = new Terrain();
+        terrain.init();
+        scene.add(terrain.obj);
+        terrain.generatePlayerPositions(2, scene);
 
         //camera.position.z = 60;
         //camera.position.y = 15;
 
         gravity = new Force(new THREE.Vector3(0, -0.055, 0));
+
+        projectiles = [];
 
         //setupMouseInteraction();
         //setupScrollInteraction();
@@ -118,12 +121,19 @@ var Scene = (function () {
                 projectiles[p].applyForce(gravity);
                 projectiles[p].update();
 
-                //TODO more complex projectile delete logic based on terrain bounding box
-                if (projectiles[p].position.y < -10) {
+
+                if (projectiles[p].checkPlaneCollision(terrain.objForHittest)) {
+                    terrain.showImpact(projectiles[p].getPlaneCollision()[0]);
                     scene.remove(projectiles[p].obj);
-                    //TODO don't just empty the array, but pluck this projectile, in case there later are more than 1
                     projectiles = [];
                 }
+
+                //TODO more complex projectile delete logic based on terrain bounding box
+                //if (projectiles[p].position.y < -10) {
+                //    scene.remove(projectiles[p].obj);
+                //    //TODO don't just empty the array, but pluck this projectile, in case there later are more than 1
+                //    projectiles = [];
+                //}
             }
         }
         renderer.render(scene, camera);
@@ -134,10 +144,10 @@ var Scene = (function () {
         init: init,
         start: start,
         addPlayer: addPlayer,
-        terrain: function () {
+        addProjectile: addProjectile,
+        getTerrain: function () {
             return terrain;
-        },
-        addProjectile: addProjectile
+        }
     };
 
 })();

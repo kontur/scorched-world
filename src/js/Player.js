@@ -131,11 +131,9 @@ function Player() {
 
 
         // dev visualization only:
-
-        direction = direction.multiplyScalar(5);
         var g = new THREE.Geometry();
         g.vertices.push(this.position);
-        g.vertices.push(this.position.clone().add(direction));
+        g.vertices.push(this.position.clone().add(direction.clone().multiplyScalar(5)));
         var m = new THREE.LineBasicMaterial({ color: 0x004400 });
         this.firingV.add(new THREE.Line(g, m));
 

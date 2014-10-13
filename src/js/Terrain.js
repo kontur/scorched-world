@@ -6,12 +6,15 @@
  */
 Terrain = function() {
 
-    var geometry,
-        material,
-        width = 100,
+    var width = 100,
         height = 100,
         widthSegments = 30,
-        heightSegments = 30;
+        heightSegments = 30,
+        geometry, // the main plain
+
+        shaded,
+        wire,
+        effects;
 
 
     //init();
@@ -21,7 +24,7 @@ Terrain = function() {
      *
      * @returns {THREE.Mesh}
      */
-    var init = function () {
+    this.init = function () {
         geometry = new THREE.PlaneGeometry(width, height, widthSegments, heightSegments);
         for (var v = 0; v < geometry.vertices.length; v++) {
             geometry.vertices[v].z += Math.random() * 2;
@@ -30,16 +33,31 @@ Terrain = function() {
         }
         geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
         geometry.verticesNeedUpdate = true;
-        material = new THREE.MeshDepthMaterial();
+        var material = new THREE.MeshDepthMaterial();
 
-        this.mesh = new THREE.Mesh(geometry, material);
-        this.wires = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x333333, wireframe: true, wireframeLinewidth: 2.5 }));
+        this.obj = new THREE.Object3D();
 
-        return this;
+        shaded = new THREE.Mesh(geometry, material);
+        shaded.userData = { name: "shaded" };
+        wire = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x333333, wireframe: true, wireframeLinewidth: 2.5 }));
+        wire.userData.name = "wire";
+        effects = new THREE.Object3D();
+        effects.userData.name = "effects";
+
+        this.obj.add(shaded);
+        this.obj.add(wire);
+        this.obj.add(effects);
+
+        // provide public reference to an object to be used for hittests
+        // this could conceivably be a simplified geometry of the rendered geometry but for now is just a reference
+        // to var shaded
+        //this.objForHittest = Utils.Object3DgetChildByName(this.obj, "shaded");
+        this.objForHittest = shaded;
     };
 
 
-    var generatePlayerPositions = function (num, scene) {
+    //TODO better generation of player positions; minimum distance, centerish positions etc
+    this.generatePlayerPositions = function (num, scene) {
         var pos = [];
         for (var i = 0; i < num; i++) {
             pos.push(getRandomPlayerPosition());
@@ -47,15 +65,23 @@ Terrain = function() {
         this.playerPositions = pos;
     };
 
-
-    var getRandomPlayerPosition = function () {
+    // private helper function
+    function getRandomPlayerPosition() {
         return geometry.vertices[Math.floor(Math.random() * geometry.vertices.length)];
     };
 
 
-    return {
-        init: init,
-        generatePlayerPositions: generatePlayerPositions
-    };
+    /**
+     * Visualize the impact made by a projectile hitting the ground at @param intersectResult
+     *
+     * @param intersectResult - Object returned by THREE.Raycaster.intersectObject
+     */
+    this.showImpact = function (intersectResult) {
+        var geometry = new THREE.SphereGeometry(1, 4, 4);
+        geometry.applyMatrix(new THREE.Matrix4().setPosition(intersectResult.point));
+        var material = new THREE.MeshBasicMaterial({ color: 0xff3300 });
+        var mesh = new THREE.Mesh(geometry, material);
+        Utils.Object3DgetChildByName(this.obj, "effects").add(mesh);
+    }
 
 };
