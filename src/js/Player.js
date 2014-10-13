@@ -97,26 +97,62 @@ function Player() {
     };
 
 
+    /**
+     * Update the internal firing vector of the canon from object and canon rotations
+     *
+     * @returns {THREE.Vector3}
+     */
     this.getFiringVector = function () {
         // extracting direction from object matrix: https://github.com/mrdoob/three.js/issues/1606
 
-        var matrix = new THREE.Matrix4();
-        matrix = matrix.extractRotation( this.obj.matrix );
+        // first extract the horizontal rotation of the main player object
+        var rotationH = new THREE.Matrix4();
+        rotationH = rotationH.extractRotation(this.obj.matrix);
 
-        var direction = new THREE.Vector3( 0, 0, 1 );
-        direction = direction.applyMatrix4(matrix);
-        direction.y = 1;
-        direction= direction.multiplyScalar(5);
+        // store a separate vector for the horizonal direction x+z
+        var directionH = new THREE.Vector3(0, 0, 1);
+        directionH = directionH.applyMatrix4(rotationH);
 
-        var geom = new THREE.Geometry();
-        geom.vertices.push(this.position);
-        geom.vertices.push(this.position.clone().add(direction));
-        var mat = new THREE.LineBasicMaterial({ color: 0xff0000 });
-        this.firingV.add(new THREE.Line(geom, mat));
+        // get the canon rotation.y in a matrix
+        var rotationV = new THREE.Matrix4();
+        rotationV = rotationV.extractRotation(this.canon.matrix);
+
+        // fix the rotation offset of the canon rail
+        var rotationOffset = new THREE.Matrix4().makeRotationX(-Math.PI/4);
+        
+        // calculate the final firing position
+        var direction = new THREE.Vector3(0, 1, 1);
+        // fix the vertical offset
+        direction = direction.applyMatrix4(rotationOffset);
+        // apply the vertical rotation
+        direction = direction.applyMatrix4(rotationV);
+        // apply the horizontal rotation
+        direction = direction.applyMatrix4(rotationH);
+
+
+        // dev visualization only:
+
+        direction = direction.multiplyScalar(5);
+        var g = new THREE.Geometry();
+        g.vertices.push(this.position);
+        g.vertices.push(this.position.clone().add(direction));
+        var m = new THREE.LineBasicMaterial({ color: 0x004400 });
+        this.firingV.add(new THREE.Line(g, m));
+
+        console.log(this.firingV.children.length);
+        while (this.firingV.children.length > 10) {
+            this.firingV.children.shift();
+        }
+
+        //directionH = directionH.multiplyScalar(5);
+        //var geom = new THREE.Geometry();
+        //geom.vertices.push(this.position);
+        //geom.vertices.push(this.position.clone().add(directionH));
+        //var mat = new THREE.LineBasicMaterial({ color: 0xff0000 });
+        //this.firingV.add(new THREE.Line(geom, mat));
 
         return direction;
     }
-
 }
 
 

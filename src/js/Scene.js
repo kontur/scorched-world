@@ -27,7 +27,7 @@ var Scene = (function () {
         this.terrain = new Terrain();
         this.terrain.init();
 
-        scene.add(this.terrain.mesh);
+        //scene.add(this.terrain.mesh);
         scene.add(this.terrain.wires);
 
         this.terrain.generatePlayerPositions(2, scene);
