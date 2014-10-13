@@ -18,7 +18,9 @@ var Scene = (function () {
         console.log("Scene.init()");
 
         scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 150);
+
+        CameraManager.init();
+
         renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("gamecanvas") });
 			renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -40,9 +42,6 @@ var Scene = (function () {
 
         projectiles = [];
 
-        //setupMouseInteraction();
-        //setupScrollInteraction();
-
     };
 
 
@@ -51,6 +50,10 @@ var Scene = (function () {
      */
     var start = function () {
         render();
+        CameraManager.setTo(new THREE.Vector3(-100, 50, 0), new THREE.Vector3(50, 10, 50));
+        setTimeout(function () {
+            CameraManager.animateTo(new THREE.Vector3(-30, 15, 0), new THREE.Vector3(0, 0, 0));
+        }, 250);
     };
 
 
@@ -62,8 +65,9 @@ var Scene = (function () {
 
         //camera.translateX(playerObj.position.x + 0);
         //camera.translateZ(playerObj.position.z + 0);
-        camera.position.y = 25;
-        camera.lookAt(playerObj.position);
+        //camera.position.y = 25;
+        //camera.lookAt(playerObj.position);
+
 
         $(playerObj).on("PROJECTILE_FIRED", function (e, projectile) {
             addProjectile(projectile);
@@ -72,43 +76,15 @@ var Scene = (function () {
 
 
         // DEBUG
-        scene.add(playerObj.firingV);
-        console.log("addPlayer", playerObj.firingV);
+        scene.add(playerObj.indicator);
+        console.log("addPlayer", playerObj.indicator);
     };
 
 
     var addProjectile = function (projectile) {
-        console.log("Scene.addProjectile()", projectile);
         projectiles.push(projectile);
         scene.add(projectile.obj);
-        console.log("Scene.addProjectile()", projectiles.length);
     };
-
-
-    function setupScrollInteraction () {
-        $(window).on('mousewheel', function(e) {
-            //console.log(e.originalEvent.wheelDelta);
-            if (e.originalEvent.wheelDelta >= 0) {
-                camera.position.z += 0.25;
-            } else {
-                camera.position.z -= 0.25;
-            }
-        });
-    }
-
-
-    function setupMouseInteraction() {
-        $(window).mousemove(function (e) {
-            var mouseX = e.originalEvent.pageX,
-                mouseY = e.originalEvent.pageY,
-                percentH = mouseX / window.innerWidth,
-                percentV = mouseY / window.innerHeight;
-            
-            camera.position.y = 10 + (5 * percentV);
-            camera.position.x = percentH * 20 - 10;
-            camera.lookAt(new THREE.Vector3(0, 0, 0));
-        });
-    }
 
 
     function render() {
@@ -135,7 +111,9 @@ var Scene = (function () {
                 //}
             }
         }
-        renderer.render(scene, camera);
+
+        CameraManager.update();
+        renderer.render(scene, CameraManager.getCamera());
     }
 
 

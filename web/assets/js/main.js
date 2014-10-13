@@ -1,5 +1,85 @@
 /*!  - v - 2014-10-13
 * Copyright (c) 2014 Johannes Neumeier; Licensed  */
+var CameraManager = (function () {
+
+    var camera;
+    var lookAt;
+
+    var targetPosition;
+    var targetLookAt;
+
+
+    var init = function () {
+        camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 150);
+    };
+
+
+    var animateTo = function (position, _lookAt) {
+        console.log("CameraManager.animateTo", position, _lookAt);
+        targetPosition = position;
+        targetLookAt = _lookAt;
+        lookAt = _lookAt;
+    };
+
+
+    var setTo = function (position, _lookAt) {
+        var diff = position.clone().sub(camera.position.clone());
+        camera.applyMatrix(new THREE.Matrix4().setPosition(diff));
+        camera.lookAt(_lookAt);
+
+        lookAt = _lookAt;
+    };
+
+
+    var update = function () {
+        if (camera.position && targetPosition) {
+            var diff = targetPosition.clone().sub(camera.position.clone());
+            diff.multiplyScalar(0.15);
+            camera.applyMatrix(new THREE.Matrix4().setPosition(diff));
+            camera.lookAt(lookAt);
+        }
+        if (lookAt != targetLookAt) {
+            camera.lookAt(lookAt);
+        }
+    };
+
+
+    //function setupScrollInteraction () {
+    //    $(window).on('mousewheel', function(e) {
+    //        //console.log(e.originalEvent.wheelDelta);
+    //        if (e.originalEvent.wheelDelta >= 0) {
+    //            camera.position.z += 0.25;
+    //        } else {
+    //            camera.position.z -= 0.25;
+    //        }
+    //    });
+    //}
+    //
+    //
+    //function setupMouseInteraction() {
+    //    $(window).mousemove(function (e) {
+    //        var mouseX = e.originalEvent.pageX,
+    //            mouseY = e.originalEvent.pageY,
+    //            percentH = mouseX / window.innerWidth,
+    //            percentV = mouseY / window.innerHeight;
+    //
+    //        camera.position.y = 10 + (5 * percentV);
+    //        camera.position.x = percentH * 20 - 10;
+    //        camera.lookAt(new THREE.Vector3(0, 0, 0));
+    //    });
+    //}
+    return {
+        init: init,
+        animateTo: animateTo,
+        setTo: setTo,
+        update: update,
+
+        getCamera: function () {
+            return camera;
+        }
+    };
+
+})();
 var Force = function (direction) {
     this.direction = direction;
 };
@@ -13,18 +93,18 @@ var Game = (function () {
         Scene.init();
         Scene.start();
 
-        player1 = new HumanPlayer();
-        //player2 = new Player();
+        player1 = new HumanPlayer({ color: 0x00ff00});
+        player2 = new AIPlayer({ color: 0xff6600 });
         player1.enableControls();
 
         player1.init();
-        //player2.init();
+        player2.init();
 
         player1.setPosition(Scene.getTerrain().playerPositions[0]);
-        //player2.setPosition(Scene.terrain.playerPositions[1]);
+        player2.setPosition(Scene.getTerrain().playerPositions[1]);
 
         Scene.addPlayer(player1);
-        //Scene.addPlayer(player2);
+        Scene.addPlayer(player2);
     };
 
     return {
@@ -32,19 +112,31 @@ var Game = (function () {
         reset: start
     };
 })();
-function Player() {
+function Player(options) {
+    console.log("Player()");
+
+    var defaults = {
+        color: 0xffffff
+    };
+
+    this.options = applyOptions(options);
+    function applyOptions(options) {
+        console.log("applyOptions", options);
+        return $.extend(defaults, options);
+    }
 
     this.position = null; // Vector3
     this.mesh = null; // Three mesh
     this.direction = null;
-    this.firingV = null;
+    this.indicator = null;
 
     this.fireForce = 0;
     this.fireButtonTimeout = null;
 
     this.init = function () {
+        console.log("Player.init()", this.options.color);
         var geometry = new THREE.IcosahedronGeometry(1, 0);
-        var material = new THREE.MeshPhongMaterial({ ambient: 0xff0000, color: 0xff3300, specular: 0x0099ff, shininess: 30, shading: THREE.FlatShading });
+        var material = new THREE.MeshPhongMaterial({ ambient: 0xffffff, color: this.options.color, specular: this.options.color, shininess: 10, shading: THREE.FlatShading });
         this.mesh = new THREE.Mesh(geometry, material);
         this.obj = new THREE.Object3D();
 
@@ -67,7 +159,6 @@ function Player() {
      * @param vector3
      */
     this.setPosition = function (vector3) {
-        console.log("Player.setPosition", vector3);
         this.position = vector3;
 
         this.obj.translateX(vector3.x);
@@ -78,7 +169,7 @@ function Player() {
         geom.vertices.push(this.position);
         geom.vertices.push(new THREE.Vector3(this.position.x, 10, this.position.z));
         var mat = new THREE.LineBasicMaterial({ color: 0xff0000 });
-        this.firingV = new THREE.Line(geom, mat);
+        this.indicator = new THREE.Line(geom, mat);
     };
 
 
@@ -97,7 +188,7 @@ function Player() {
 
         console.log("Player.fire()", force);
 
-        projectile.direction = this.getFiringVector().multiplyScalar(force); //new THREE.Vector3(0.5, 0.5, 0);
+        projectile.direction = this.getindicatorector().multiplyScalar(force); //new THREE.Vector3(0.5, 0.5, 0);
         projectile.mass = 0.151;
         projectile.setPosition(this.position.clone());
 
@@ -116,7 +207,7 @@ function Player() {
         }
 
         //console.log("Player.addAngle()", this.canon.rotation.x);
-        this.getFiringVector();
+        this.getindicatorector();
     };
 
 
@@ -128,7 +219,7 @@ function Player() {
         // rotate the whole player object, not just the canon
         this.obj.rotateOnAxis(new THREE.Vector3(0, 1, 0), rotationChange);
         //console.log("Player.addRotation", this.obj.rotation.y);
-        this.getFiringVector();
+        this.getindicatorector();
     };
 
 
@@ -137,7 +228,7 @@ function Player() {
      *
      * @returns {THREE.Vector3}
      */
-    this.getFiringVector = function (forceIndicator) {
+    this.getindicatorector = function (forceIndicator) {
         // extracting direction from object matrix: https://github.com/mrdoob/three.js/issues/1606
 
         if (!forceIndicator) {
@@ -174,10 +265,10 @@ function Player() {
         g.vertices.push(this.position);
         g.vertices.push(this.position.clone().add(direction.clone().multiplyScalar(1 + forceIndicator * 5)));
         var m = new THREE.LineBasicMaterial({ color: "rgb(" + Math.round(forceIndicator * 255) + ", 0, 0)" });
-        this.firingV.add(new THREE.Line(g, m));
+        this.indicator.add(new THREE.Line(g, m));
 
-        while (this.firingV.children.length > 1) {
-            this.firingV.children.shift();
+        while (this.indicator.children.length > 1) {
+            this.indicator.children.shift();
         }
 
         //directionH = directionH.multiplyScalar(5);
@@ -185,7 +276,7 @@ function Player() {
         //geom.vertices.push(this.position);
         //geom.vertices.push(this.position.clone().add(directionH));
         //var mat = new THREE.LineBasicMaterial({ color: 0xff0000 });
-        //this.firingV.add(new THREE.Line(geom, mat));
+        //this.indicator.add(new THREE.Line(geom, mat));
 
         return direction;
     }
@@ -197,7 +288,8 @@ function Player() {
  *
  * @constructor new HumanPlayer()
  */
-function HumanPlayer() {
+function HumanPlayer(options) {
+    console.log("HumanPlayer()");
 
     var that = this;
     this.controlsEnabled = false;
@@ -208,7 +300,7 @@ function HumanPlayer() {
         this.controlsEnabled = false;
     };
 
-    Player.call(this);
+    Player.call(this, options);
 
     setupControls();
 
@@ -285,12 +377,22 @@ function HumanPlayer() {
             that.fireForce = 100;
         }
         that.fireButtonTimeout = setTimeout(fireButtonDown, 5);
-        that.getFiringVector(Math.min(100, that.fireForce) / 100);
+        that.getindicatorector(Math.min(100, that.fireForce) / 100);
     }
 }
 
 HumanPlayer.prototype = new Player();
 HumanPlayer.constructor = HumanPlayer;
+
+
+
+function AIPlayer(options) {
+    Player.call(this, options);
+
+};
+
+AIPlayer.prototype = new Player();
+AIPlayer.constructor = AIPlayer;
 var Projectile = function () {
     var geometry = new THREE.SphereGeometry(0.25, 4, 4);
     var material = new THREE.MeshBasicMaterial({ color: 0xff00ff });
@@ -387,7 +489,9 @@ var Scene = (function () {
         console.log("Scene.init()");
 
         scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 150);
+
+        CameraManager.init();
+
         renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("gamecanvas") });
 			renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -409,9 +513,6 @@ var Scene = (function () {
 
         projectiles = [];
 
-        //setupMouseInteraction();
-        //setupScrollInteraction();
-
     };
 
 
@@ -420,6 +521,10 @@ var Scene = (function () {
      */
     var start = function () {
         render();
+        CameraManager.setTo(new THREE.Vector3(-100, 50, 0), new THREE.Vector3(50, 10, 50));
+        setTimeout(function () {
+            CameraManager.animateTo(new THREE.Vector3(-30, 15, 0), new THREE.Vector3(0, 0, 0));
+        }, 250);
     };
 
 
@@ -431,8 +536,9 @@ var Scene = (function () {
 
         //camera.translateX(playerObj.position.x + 0);
         //camera.translateZ(playerObj.position.z + 0);
-        camera.position.y = 25;
-        camera.lookAt(playerObj.position);
+        //camera.position.y = 25;
+        //camera.lookAt(playerObj.position);
+
 
         $(playerObj).on("PROJECTILE_FIRED", function (e, projectile) {
             addProjectile(projectile);
@@ -441,43 +547,15 @@ var Scene = (function () {
 
 
         // DEBUG
-        scene.add(playerObj.firingV);
-        console.log("addPlayer", playerObj.firingV);
+        scene.add(playerObj.indicator);
+        console.log("addPlayer", playerObj.indicator);
     };
 
 
     var addProjectile = function (projectile) {
-        console.log("Scene.addProjectile()", projectile);
         projectiles.push(projectile);
         scene.add(projectile.obj);
-        console.log("Scene.addProjectile()", projectiles.length);
     };
-
-
-    function setupScrollInteraction () {
-        $(window).on('mousewheel', function(e) {
-            //console.log(e.originalEvent.wheelDelta);
-            if (e.originalEvent.wheelDelta >= 0) {
-                camera.position.z += 0.25;
-            } else {
-                camera.position.z -= 0.25;
-            }
-        });
-    }
-
-
-    function setupMouseInteraction() {
-        $(window).mousemove(function (e) {
-            var mouseX = e.originalEvent.pageX,
-                mouseY = e.originalEvent.pageY,
-                percentH = mouseX / window.innerWidth,
-                percentV = mouseY / window.innerHeight;
-            
-            camera.position.y = 10 + (5 * percentV);
-            camera.position.x = percentH * 20 - 10;
-            camera.lookAt(new THREE.Vector3(0, 0, 0));
-        });
-    }
 
 
     function render() {
@@ -504,7 +582,9 @@ var Scene = (function () {
                 //}
             }
         }
-        renderer.render(scene, camera);
+
+        CameraManager.update();
+        renderer.render(scene, CameraManager.getCamera());
     }
 
 
@@ -607,14 +687,11 @@ var UI = (function () {
     var init = function () {
         $(window).on("resize", onResize);
         onResize();
-        console.log("hello ui init");
-
         $("#ui-reset-scene").on("click", resetScene);
     };
 
     //TODO this resizing doesn't really work yet as intended; it stretches the scene
     function onResize() {
-        console.log("hello resize");
         var w = $(window).width();
         var h = $(window).height();
 

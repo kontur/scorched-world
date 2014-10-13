@@ -7,18 +7,18 @@ var Game = (function () {
         Scene.init();
         Scene.start();
 
-        player1 = new HumanPlayer();
-        //player2 = new Player();
+        player1 = new HumanPlayer({ color: 0x00ff00});
+        player2 = new AIPlayer({ color: 0xff6600 });
         player1.enableControls();
 
         player1.init();
-        //player2.init();
+        player2.init();
 
         player1.setPosition(Scene.getTerrain().playerPositions[0]);
-        //player2.setPosition(Scene.terrain.playerPositions[1]);
+        player2.setPosition(Scene.getTerrain().playerPositions[1]);
 
         Scene.addPlayer(player1);
-        //Scene.addPlayer(player2);
+        Scene.addPlayer(player2);
     };
 
     return {

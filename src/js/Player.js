@@ -3,19 +3,31 @@
  *
  * @constructor new Player()
  */
-function Player() {
+function Player(options) {
+    console.log("Player()");
+
+    var defaults = {
+        color: 0xffffff
+    };
+
+    this.options = applyOptions(options);
+    function applyOptions(options) {
+        console.log("applyOptions", options);
+        return $.extend(defaults, options);
+    }
 
     this.position = null; // Vector3
     this.mesh = null; // Three mesh
     this.direction = null;
-    this.firingV = null;
+    this.indicator = null;
 
     this.fireForce = 0;
     this.fireButtonTimeout = null;
 
     this.init = function () {
+        console.log("Player.init()", this.options.color);
         var geometry = new THREE.IcosahedronGeometry(1, 0);
-        var material = new THREE.MeshPhongMaterial({ ambient: 0xff0000, color: 0xff3300, specular: 0x0099ff, shininess: 30, shading: THREE.FlatShading });
+        var material = new THREE.MeshPhongMaterial({ ambient: 0xffffff, color: this.options.color, specular: this.options.color, shininess: 10, shading: THREE.FlatShading });
         this.mesh = new THREE.Mesh(geometry, material);
         this.obj = new THREE.Object3D();
 
@@ -38,7 +50,6 @@ function Player() {
      * @param vector3
      */
     this.setPosition = function (vector3) {
-        console.log("Player.setPosition", vector3);
         this.position = vector3;
 
         this.obj.translateX(vector3.x);
@@ -49,7 +60,7 @@ function Player() {
         geom.vertices.push(this.position);
         geom.vertices.push(new THREE.Vector3(this.position.x, 10, this.position.z));
         var mat = new THREE.LineBasicMaterial({ color: 0xff0000 });
-        this.firingV = new THREE.Line(geom, mat);
+        this.indicator = new THREE.Line(geom, mat);
     };
 
 
@@ -68,7 +79,7 @@ function Player() {
 
         console.log("Player.fire()", force);
 
-        projectile.direction = this.getFiringVector().multiplyScalar(force); //new THREE.Vector3(0.5, 0.5, 0);
+        projectile.direction = this.getindicatorector().multiplyScalar(force); //new THREE.Vector3(0.5, 0.5, 0);
         projectile.mass = 0.151;
         projectile.setPosition(this.position.clone());
 
@@ -87,7 +98,7 @@ function Player() {
         }
 
         //console.log("Player.addAngle()", this.canon.rotation.x);
-        this.getFiringVector();
+        this.getindicatorector();
     };
 
 
@@ -99,7 +110,7 @@ function Player() {
         // rotate the whole player object, not just the canon
         this.obj.rotateOnAxis(new THREE.Vector3(0, 1, 0), rotationChange);
         //console.log("Player.addRotation", this.obj.rotation.y);
-        this.getFiringVector();
+        this.getindicatorector();
     };
 
 
@@ -108,7 +119,7 @@ function Player() {
      *
      * @returns {THREE.Vector3}
      */
-    this.getFiringVector = function (forceIndicator) {
+    this.getindicatorector = function (forceIndicator) {
         // extracting direction from object matrix: https://github.com/mrdoob/three.js/issues/1606
 
         if (!forceIndicator) {
@@ -145,10 +156,10 @@ function Player() {
         g.vertices.push(this.position);
         g.vertices.push(this.position.clone().add(direction.clone().multiplyScalar(1 + forceIndicator * 5)));
         var m = new THREE.LineBasicMaterial({ color: "rgb(" + Math.round(forceIndicator * 255) + ", 0, 0)" });
-        this.firingV.add(new THREE.Line(g, m));
+        this.indicator.add(new THREE.Line(g, m));
 
-        while (this.firingV.children.length > 1) {
-            this.firingV.children.shift();
+        while (this.indicator.children.length > 1) {
+            this.indicator.children.shift();
         }
 
         //directionH = directionH.multiplyScalar(5);
@@ -156,7 +167,7 @@ function Player() {
         //geom.vertices.push(this.position);
         //geom.vertices.push(this.position.clone().add(directionH));
         //var mat = new THREE.LineBasicMaterial({ color: 0xff0000 });
-        //this.firingV.add(new THREE.Line(geom, mat));
+        //this.indicator.add(new THREE.Line(geom, mat));
 
         return direction;
     }
@@ -168,7 +179,8 @@ function Player() {
  *
  * @constructor new HumanPlayer()
  */
-function HumanPlayer() {
+function HumanPlayer(options) {
+    console.log("HumanPlayer()");
 
     var that = this;
     this.controlsEnabled = false;
@@ -179,7 +191,7 @@ function HumanPlayer() {
         this.controlsEnabled = false;
     };
 
-    Player.call(this);
+    Player.call(this, options);
 
     setupControls();
 
@@ -256,9 +268,19 @@ function HumanPlayer() {
             that.fireForce = 100;
         }
         that.fireButtonTimeout = setTimeout(fireButtonDown, 5);
-        that.getFiringVector(Math.min(100, that.fireForce) / 100);
+        that.getindicatorector(Math.min(100, that.fireForce) / 100);
     }
 }
 
 HumanPlayer.prototype = new Player();
 HumanPlayer.constructor = HumanPlayer;
+
+
+
+function AIPlayer(options) {
+    Player.call(this, options);
+
+};
+
+AIPlayer.prototype = new Player();
+AIPlayer.constructor = AIPlayer;
