@@ -71,6 +71,32 @@ Terrain = function() {
     };
 
 
+    this.closestOtherPlayer = function (position, excludePosition) {
+        //console.log("Terrain.closestOtherPlayer", position, excludePosition);
+
+        // TODO work around this magic number
+        var closest = 99999999;
+        var closestPos = null;
+        for (pos in this.playerPositions) {
+            if (this.playerPositions[pos] != excludePosition) {
+                var distance = position.distanceTo(this.playerPositions[pos]);
+                if (distance < closest) {
+                    closestPos = this.playerPositions[pos];
+                }
+            }
+        }
+
+        if (!closestPos) {
+            throw(new Error("Terrain.closestOtherPlayer() could not determine closest player to ", position));
+        }
+
+        return {
+            position: closestPos,
+            distance: closest
+        };
+    };
+
+
     /**
      * Visualize the impact made by a projectile hitting the ground at @param intersectResult
      *

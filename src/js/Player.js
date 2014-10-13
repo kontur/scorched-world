@@ -96,7 +96,7 @@ function Player(options) {
             this.canon.rotateX(angleChange);
         }
 
-        //console.log("Player.addAngle()", this.canon.rotation.x);
+        console.log("Player.addAngle()", this.canon.rotation.x);
         this.getIndicator();
     };
 
@@ -108,7 +108,8 @@ function Player(options) {
     this.addRotation = function(rotationChange) {
         // rotate the whole player object, not just the canon
         this.obj.rotateOnAxis(new THREE.Vector3(0, 1, 0), rotationChange);
-        //console.log("Player.addRotation", this.obj.rotation.y);
+
+        console.log("Player.addRotation", this.obj.rotation.y);
         this.getIndicator();
     };
 
@@ -157,7 +158,7 @@ function Player(options) {
         var m = new THREE.LineBasicMaterial({ color: "rgb(" + Math.round(forceIndicator * 255) + ", 0, 0)" });
         this.indicator.add(new THREE.Line(g, m));
 
-        while (this.indicator.children.length > 1) {
+        while (this.indicator.children.length > 5) {
             this.indicator.children.shift();
         }
 
@@ -291,6 +292,55 @@ function AIPlayer(options) {
     Player.call(this, options);
 
     this.isHuman = false;
+
+    var shots = [];
+
+    this.autofire = function () {
+        var that = this;
+        setTimeout(function () {
+
+            var shot = that.guessShot([], [], []);
+            console.log(shot);
+
+            that.animateTo(shot.rotationH, shot.rotationV);
+
+            setTimeout(function () {
+                that.fire(shot.force);
+
+                $(window).on("PROJECTILE_IMPACT", function (e, data) {
+                    // get closest other player to impact
+                    var closest= Scene.getTerrain().closestOtherPlayer(data.hit.point, that.position);
+                    shot.closest = data.hit.point.sub(closest);
+                });
+                console.log("shot:", shot);
+
+                shots.push(shot);
+
+                that.getIndicator();
+            }, 500);
+
+        }, 1000);
+    };
+
+
+    this.animateTo = function (rotationH, rotationV) {
+        this.canon.rotateX(rotationV);
+        this.obj.rotateY(rotationH);
+    };
+
+
+    this.guessShot = function (rotationHLimits, rotationVLimits, forceLimits) {
+
+        var rotationH = Math.random() * Math.PI;
+        var rotationV = Math.random() * Math.PI / 2 - Math.PI / 4;
+        var force = Math.random() * 0.5 + 0.5;
+
+        return {
+            rotationH: rotationH,
+            rotationV: rotationV,
+            force: force
+        };
+    };
 
 };
 

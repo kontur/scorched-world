@@ -26,8 +26,7 @@ var Game = (function () {
 
         currentTurn = 0;
 
-
-        nextTurn();
+        setTimeout(nextTurn, 1500);
     };
 
 
@@ -35,11 +34,17 @@ var Game = (function () {
         console.log("Game.nextTurn()", currentTurn, players[currentTurn].isHuman);
 
         $(window).on("PROJECTILE_IMPACT", updateDamage);
+        var pos = players[currentTurn].position.clone();
+        pos.x -= 15;
+        pos.z -= 15;
+        pos.y = 15;
+        CameraManager.animateTo(pos, players[currentTurn].position);
 
         if (players[currentTurn].isHuman) {
             players[currentTurn].enableControls();
         } else {
-            players[currentTurn].fire(1);
+            // TODO plenty of AI and animation logic
+            players[currentTurn].autofire();
         }
     }
 

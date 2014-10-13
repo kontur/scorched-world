@@ -112,8 +112,7 @@ var Game = (function () {
 
         currentTurn = 0;
 
-
-        nextTurn();
+        setTimeout(nextTurn, 1500);
     };
 
 
@@ -121,11 +120,17 @@ var Game = (function () {
         console.log("Game.nextTurn()", currentTurn, players[currentTurn].isHuman);
 
         $(window).on("PROJECTILE_IMPACT", updateDamage);
+        var pos = players[currentTurn].position.clone();
+        pos.x -= 15;
+        pos.z -= 15;
+        pos.y = 15;
+        CameraManager.animateTo(pos, players[currentTurn].position);
 
         if (players[currentTurn].isHuman) {
             players[currentTurn].enableControls();
         } else {
-            players[currentTurn].fire(1);
+            // TODO plenty of AI and animation logic
+            players[currentTurn].autofire();
         }
     }
 
@@ -246,7 +251,7 @@ function Player(options) {
             this.canon.rotateX(angleChange);
         }
 
-        //console.log("Player.addAngle()", this.canon.rotation.x);
+        console.log("Player.addAngle()", this.canon.rotation.x);
         this.getIndicator();
     };
 
@@ -258,7 +263,8 @@ function Player(options) {
     this.addRotation = function(rotationChange) {
         // rotate the whole player object, not just the canon
         this.obj.rotateOnAxis(new THREE.Vector3(0, 1, 0), rotationChange);
-        //console.log("Player.addRotation", this.obj.rotation.y);
+
+        console.log("Player.addRotation", this.obj.rotation.y);
         this.getIndicator();
     };
 
@@ -307,7 +313,7 @@ function Player(options) {
         var m = new THREE.LineBasicMaterial({ color: "rgb(" + Math.round(forceIndicator * 255) + ", 0, 0)" });
         this.indicator.add(new THREE.Line(g, m));
 
-        while (this.indicator.children.length > 1) {
+        while (this.indicator.children.length > 5) {
             this.indicator.children.shift();
         }
 
@@ -441,6 +447,55 @@ function AIPlayer(options) {
     Player.call(this, options);
 
     this.isHuman = false;
+
+    var shots = [];
+
+    this.autofire = function () {
+        var that = this;
+        setTimeout(function () {
+
+            var shot = that.guessShot([], [], []);
+            console.log(shot);
+
+            that.animateTo(shot.rotationH, shot.rotationV);
+
+            setTimeout(function () {
+                that.fire(shot.force);
+
+                $(window).on("PROJECTILE_IMPACT", function (e, data) {
+                    // get closest other player to impact
+                    var closest= Scene.getTerrain().closestOtherPlayer(data.hit.point, that.position);
+                    shot.closest = data.hit.point.sub(closest);
+                });
+                console.log("shot:", shot);
+
+                shots.push(shot);
+
+                that.getIndicator();
+            }, 500);
+
+        }, 1000);
+    };
+
+
+    this.animateTo = function (rotationH, rotationV) {
+        this.canon.rotateX(rotationV);
+        this.obj.rotateY(rotationH);
+    };
+
+
+    this.guessShot = function (rotationHLimits, rotationVLimits, forceLimits) {
+
+        var rotationH = Math.random() * Math.PI;
+        var rotationV = Math.random() * Math.PI / 2 - Math.PI / 4;
+        var force = Math.random() * 0.5 + 0.5;
+
+        return {
+            rotationH: rotationH,
+            rotationV: rotationV,
+            force: force
+        };
+    };
 
 };
 
@@ -623,12 +678,13 @@ var Scene = (function () {
 
                 if (projectiles[p].checkPlaneCollision(terrain.objForHittest)) {
                     terrain.showImpact(projectiles[p].getPlaneCollision()[0]);
-                    scene.remove(projectiles[p].obj);
-                    projectiles = [];
 
                     // TODO BAD practise to have this event trigger on window :/
                     // maybe need to make Scene a object after all
-                    $(window).trigger("PROJECTILE_IMPACT");
+                    $(window).trigger("PROJECTILE_IMPACT", { hit: projectiles[p].getPlaneCollision()[0] });
+
+                    scene.remove(projectiles[p].obj);
+                    projectiles = [];
                 }
 
                 //TODO more complex projectile delete logic based on terrain bounding box
@@ -724,6 +780,32 @@ Terrain = function() {
     };
 
 
+    this.closestOtherPlayer = function (position, excludePosition) {
+        //console.log("Terrain.closestOtherPlayer", position, excludePosition);
+
+        // TODO work around this magic number
+        var closest = 99999999;
+        var closestPos = null;
+        for (pos in this.playerPositions) {
+            if (this.playerPositions[pos] != excludePosition) {
+                var distance = position.distanceTo(this.playerPositions[pos]);
+                if (distance < closest) {
+                    closestPos = this.playerPositions[pos];
+                }
+            }
+        }
+
+        if (!closestPos) {
+            throw(new Error("Terrain.closestOtherPlayer() could not determine closest player to ", position));
+        }
+
+        return {
+            position: closestPos,
+            distance: closest
+        };
+    };
+
+
     /**
      * Visualize the impact made by a projectile hitting the ground at @param intersectResult
      *
@@ -745,6 +827,7 @@ var UI = (function () {
         $(window).on("resize", onResize);
         onResize();
         $("#ui-reset-scene").on("click", resetScene);
+        $("#ui-start-game").on("click", startGame);
     };
 
     //TODO this resizing doesn't really work yet as intended; it stretches the scene
@@ -759,6 +842,16 @@ var UI = (function () {
 
     function resetScene() {
         Game.reset();
+    }
+
+    function startGame() {
+        var players = [
+            //new HumanPlayer({ color: 0x00ff00, name: "Foobar"}),
+            new AIPlayer({ color: 0xff00ff, name: "Foobar" }),
+            new AIPlayer({ color: 0xff6600, difficulty: 0, name: "Robert the Robot" })
+        ];
+
+        Game.start(players);
     }
 
     return {
@@ -798,11 +891,5 @@ var Utils = (function () {
 $(function() {
 
     UI.init();
-
-    var players = [
-        new HumanPlayer({ color: 0x00ff00, name: "Foobar"}),
-        new AIPlayer({ color: 0xff6600, difficulty: 0, name: "Robert the Robot" })
-    ];
-    Game.start(players);
 
 });
