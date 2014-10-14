@@ -62,22 +62,34 @@ var Projectile = function () {
 
 
     this.checkPlaneCollision = function (plane) {
-        // update the raycaster position to case a ray straight down from the current projectile position
+        // update the raycaster position to cast a ray straight down from the current projectile position
         raycaster.set(this.position, raycasterDirection);
 
         // if the ray hit something the projectile is still above the surface, no hit, but store the lastResult
         var test = raycaster.intersectObject(plane);
 
+        console.log("check", test, lastResult);
+
         if (test.length) {
             lastResult = test;
+
+            if (lastResult[0].point.x == NaN) {
+                console.log("--overwriting NaN point");
+                lastResult[0].point = this.position;
+            }
             return false;
         } else {
+            console.log("checkPlaneCollision no intersect", lastResult);
+            if (!lastResult) {
+                lastResult = [{ point: this.position }];
+            }
             return true;
         }
     };
 
 
     this.getPlaneCollision = function () {
+        console.log("Projectile.getPlaneCollision", lastResult);
         return lastResult ? lastResult : false;
     };
 };

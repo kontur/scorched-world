@@ -6,11 +6,15 @@
  */
 Terrain = function() {
 
-    var width = 100,
-        height = 100,
-        widthSegments = 30,
-        heightSegments = 30,
+    var width = 400,
+        height = 400,
+        widthSegments = 60,
+        heightSegments = 60,
         geometry, // the main plain
+
+        // area of the main plain that has actual game stuff happening in it
+        widthArea = 80,
+        heightArea = 80,
 
         shaded,
         wire,
@@ -39,7 +43,7 @@ Terrain = function() {
 
         shaded = new THREE.Mesh(geometry, material);
         shaded.userData = { name: "shaded" };
-        wire = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x333333, wireframe: true, wireframeLinewidth: 2.5 }));
+        wire = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x111111, wireframe: true, wireframeLinewidth: 0.5 }));
         wire.userData.name = "wire";
         effects = new THREE.Object3D();
         effects.userData.name = "effects";
@@ -56,13 +60,46 @@ Terrain = function() {
     };
 
 
-    //TODO better generation of player positions; minimum distance, centerish positions etc
-    this.generatePlayerPositions = function (num, scene) {
+    /**
+     * Generates new possible positions for the players to be placed at
+     *
+     * @param num
+     * @returns {Array|*|Terrain.playerPositions}
+     */
+    this.generatePlayerPositions = function (num) {
         var pos = [];
+
+        // generate new positions for num players
         for (var i = 0; i < num; i++) {
-            pos.push(getRandomPlayerPosition());
+            var found = false,
+                position;
+
+            // until we found a suitable position, generate new ones
+            while (!found) {
+                position = getRandomPlayerPosition();
+
+                // check the player is in the main area of the level
+                if (position.x > -widthArea / 2 && position.x < widthArea / 2 &&
+                    position.z > -heightArea / 2 && position.z < heightArea / 2)
+                {
+                    // asume this is an ok position, but
+                    found = true;
+
+                    // a) check there is no duplicates, i.e. the position has not yet been assigned for another player
+                    for (var p = 0; p < pos.length; p++) {
+                        if (pos[p] == position) {
+                            found = false;
+                        }
+                    }
+
+                    //TODO and b) make sure there is minimumDistance (percent of main area) between the players
+                }
+            }
+            pos.push(position);
         }
         this.playerPositions = pos;
+
+        return this.playerPositions;
     };
 
     // private helper function
@@ -72,7 +109,11 @@ Terrain = function() {
 
 
     this.closestOtherPlayer = function (position, excludePosition) {
-        //console.log("Terrain.closestOtherPlayer", position, excludePosition);
+        console.log("Terrain.closestOtherPlayer", position, excludePosition, position.x);
+
+        if (isNaN(position.x)) {
+            return false;
+        }
 
         // TODO work around this magic number
         var closest = 99999999;

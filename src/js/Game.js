@@ -31,6 +31,7 @@ var Game = (function () {
 
 
     function nextTurn() {
+        console.log("----------------------------------");
         console.log("Game.nextTurn()", currentTurn, players[currentTurn].isHuman);
 
         $(window).on("PROJECTILE_IMPACT", updateDamage);

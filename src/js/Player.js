@@ -11,7 +11,7 @@ function Player(options) {
 
     this.options = applyOptions(options);
     function applyOptions(options) {
-        console.log("applyOptions", options);
+        //console.log("applyOptions", options);
         return $.extend(defaults, options);
     }
 
@@ -300,7 +300,6 @@ function AIPlayer(options) {
         setTimeout(function () {
 
             var shot = that.guessShot([], [], []);
-            console.log(shot);
 
             that.animateTo(shot.rotationH, shot.rotationV);
 
@@ -309,6 +308,7 @@ function AIPlayer(options) {
 
                 $(window).on("PROJECTILE_IMPACT", function (e, data) {
                     // get closest other player to impact
+                    console.log("AIPlayer.autofire", data);
                     var closest= Scene.getTerrain().closestOtherPlayer(data.hit.point, that.position);
                     shot.closest = data.hit.point.sub(closest);
                 });

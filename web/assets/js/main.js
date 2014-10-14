@@ -1,4 +1,4 @@
-/*!  - v - 2014-10-13
+/*!  - v - 2014-10-14
 * Copyright (c) 2014 Johannes Neumeier; Licensed  */
 var CameraManager = (function () {
 
@@ -15,7 +15,7 @@ var CameraManager = (function () {
 
 
     var animateTo = function (position, _lookAt) {
-        console.log("CameraManager.animateTo", position, _lookAt);
+        //console.log("CameraManager.animateTo", position, _lookAt);
         targetPosition = position;
         targetLookAt = _lookAt;
         lookAt = _lookAt;
@@ -117,6 +117,7 @@ var Game = (function () {
 
 
     function nextTurn() {
+        console.log("----------------------------------");
         console.log("Game.nextTurn()", currentTurn, players[currentTurn].isHuman);
 
         $(window).on("PROJECTILE_IMPACT", updateDamage);
@@ -166,7 +167,7 @@ function Player(options) {
 
     this.options = applyOptions(options);
     function applyOptions(options) {
-        console.log("applyOptions", options);
+        //console.log("applyOptions", options);
         return $.extend(defaults, options);
     }
 
@@ -455,7 +456,6 @@ function AIPlayer(options) {
         setTimeout(function () {
 
             var shot = that.guessShot([], [], []);
-            console.log(shot);
 
             that.animateTo(shot.rotationH, shot.rotationV);
 
@@ -464,6 +464,7 @@ function AIPlayer(options) {
 
                 $(window).on("PROJECTILE_IMPACT", function (e, data) {
                     // get closest other player to impact
+                    console.log("AIPlayer.autofire", data);
                     var closest= Scene.getTerrain().closestOtherPlayer(data.hit.point, that.position);
                     shot.closest = data.hit.point.sub(closest);
                 });
@@ -560,22 +561,34 @@ var Projectile = function () {
 
 
     this.checkPlaneCollision = function (plane) {
-        // update the raycaster position to case a ray straight down from the current projectile position
+        // update the raycaster position to cast a ray straight down from the current projectile position
         raycaster.set(this.position, raycasterDirection);
 
         // if the ray hit something the projectile is still above the surface, no hit, but store the lastResult
         var test = raycaster.intersectObject(plane);
 
+        console.log("check", test, lastResult);
+
         if (test.length) {
             lastResult = test;
+
+            if (lastResult[0].point.x == NaN) {
+                console.log("--overwriting NaN point");
+                lastResult[0].point = this.position;
+            }
             return false;
         } else {
+            console.log("checkPlaneCollision no intersect", lastResult);
+            if (!lastResult) {
+                lastResult = [{ point: this.position }];
+            }
             return true;
         }
     };
 
 
     this.getPlaneCollision = function () {
+        console.log("Projectile.getPlaneCollision", lastResult);
         return lastResult ? lastResult : false;
     };
 };
@@ -715,11 +728,15 @@ var Scene = (function () {
 
 Terrain = function() {
 
-    var width = 100,
-        height = 100,
-        widthSegments = 30,
-        heightSegments = 30,
+    var width = 400,
+        height = 400,
+        widthSegments = 60,
+        heightSegments = 60,
         geometry, // the main plain
+
+        // area of the main plain that has actual game stuff happening in it
+        widthArea = 80,
+        heightArea = 80,
 
         shaded,
         wire,
@@ -748,7 +765,7 @@ Terrain = function() {
 
         shaded = new THREE.Mesh(geometry, material);
         shaded.userData = { name: "shaded" };
-        wire = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x333333, wireframe: true, wireframeLinewidth: 2.5 }));
+        wire = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x111111, wireframe: true, wireframeLinewidth: 0.5 }));
         wire.userData.name = "wire";
         effects = new THREE.Object3D();
         effects.userData.name = "effects";
@@ -765,13 +782,46 @@ Terrain = function() {
     };
 
 
-    //TODO better generation of player positions; minimum distance, centerish positions etc
-    this.generatePlayerPositions = function (num, scene) {
+    /**
+     * Generates new possible positions for the players to be placed at
+     *
+     * @param num
+     * @returns {Array|*|Terrain.playerPositions}
+     */
+    this.generatePlayerPositions = function (num) {
         var pos = [];
+
+        // generate new positions for num players
         for (var i = 0; i < num; i++) {
-            pos.push(getRandomPlayerPosition());
+            var found = false,
+                position;
+
+            // until we found a suitable position, generate new ones
+            while (!found) {
+                position = getRandomPlayerPosition();
+
+                // check the player is in the main area of the level
+                if (position.x > -widthArea / 2 && position.x < widthArea / 2 &&
+                    position.z > -heightArea / 2 && position.z < heightArea / 2)
+                {
+                    // asume this is an ok position, but
+                    found = true;
+
+                    // a) check there is no duplicates, i.e. the position has not yet been assigned for another player
+                    for (var p = 0; p < pos.length; p++) {
+                        if (pos[p] == position) {
+                            found = false;
+                        }
+                    }
+
+                    //TODO and b) make sure there is minimumDistance (percent of main area) between the players
+                }
+            }
+            pos.push(position);
         }
         this.playerPositions = pos;
+
+        return this.playerPositions;
     };
 
     // private helper function
@@ -781,7 +831,11 @@ Terrain = function() {
 
 
     this.closestOtherPlayer = function (position, excludePosition) {
-        //console.log("Terrain.closestOtherPlayer", position, excludePosition);
+        console.log("Terrain.closestOtherPlayer", position, excludePosition, position.x);
+
+        if (isNaN(position.x)) {
+            return false;
+        }
 
         // TODO work around this magic number
         var closest = 99999999;

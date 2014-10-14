@@ -16,7 +16,7 @@ var CameraManager = (function () {
 
 
     var animateTo = function (position, _lookAt) {
-        console.log("CameraManager.animateTo", position, _lookAt);
+        //console.log("CameraManager.animateTo", position, _lookAt);
         targetPosition = position;
         targetLookAt = _lookAt;
         lookAt = _lookAt;
