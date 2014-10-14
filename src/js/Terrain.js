@@ -8,8 +8,8 @@ Terrain = function() {
 
     var width = 400,
         height = 400,
-        widthSegments = 60,
-        heightSegments = 60,
+        widthSegments = 400,
+        heightSegments = 400,
         geometry, // the main plain
 
         // area of the main plain that has actual game stuff happening in it
@@ -18,7 +18,9 @@ Terrain = function() {
 
         shaded,
         wire,
-        effects;
+        effects,
+
+        noise;
 
 
     //init();
@@ -29,11 +31,22 @@ Terrain = function() {
      * @returns {THREE.Mesh}
      */
     this.init = function () {
+
+        noise = new Noise(Math.random());
+        //console.log("NOISE", noise);
+
+
         geometry = new THREE.PlaneGeometry(width, height, widthSegments, heightSegments);
         for (var v = 0; v < geometry.vertices.length; v++) {
-            geometry.vertices[v].z += Math.random() * 2;
-            geometry.vertices[v].x += Math.random() - 0.5;
-            geometry.vertices[v].y += Math.random() - 0.5;
+
+            var x = geometry.vertices[v].x;
+            var y = geometry.vertices[v].y;
+
+            // layer different frequency noise link suggested here: http://stackoverflow.com/a/12627930/999162
+            geometry.vertices[v].z += noise.perlin2(x, y) + noise.perlin2(x / 2, y / 2) + 4 * noise.perlin2(x / 8, y / 8) +
+                16 * noise.perlin2(x / 32, y / 32);
+            geometry.vertices[v].x += noise.perlin2(x, y);
+            geometry.vertices[v].y += noise.perlin2(x, y);
         }
         geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
         geometry.verticesNeedUpdate = true;
@@ -43,7 +56,7 @@ Terrain = function() {
 
         shaded = new THREE.Mesh(geometry, material);
         shaded.userData = { name: "shaded" };
-        wire = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x111111, wireframe: true, wireframeLinewidth: 0.5 }));
+        wire = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x999999, wireframe: true, wireframeLinewidth: 0.5 }));
         wire.userData.name = "wire";
         effects = new THREE.Object3D();
         effects.userData.name = "effects";

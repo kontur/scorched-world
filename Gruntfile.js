@@ -22,7 +22,8 @@ module.exports = function(grunt) {
       },
         libs: {
             src: ['bower_components/jquery/dist/jquery.js',
-                  'bower_components/threejs/build/three.js'],
+                  'bower_components/threejs/build/three.js',
+                  'bower_components/noisejs/index.js'],
             dest: 'web/assets/js/libs.js'
         }
     },

@@ -11,6 +11,11 @@ var CameraManager = (function () {
 
     var init = function () {
         camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 150);
+
+        $(window).on("PROJECTILE_MOVE", function (e, data) {
+            camera.lookAt(data.position);
+            lookAt = data.position;
+        });
     };
 
 
@@ -122,9 +127,11 @@ var Game = (function () {
 
         $(window).on("PROJECTILE_IMPACT", updateDamage);
         var pos = players[currentTurn].position.clone();
+
+        //TODO instead of x,z -15 those should be behind the player facing the direction of other players
         pos.x -= 15;
         pos.z -= 15;
-        pos.y = 15;
+        pos.y = 25;
         CameraManager.animateTo(pos, players[currentTurn].position);
 
         if (players[currentTurn].isHuman) {
@@ -149,7 +156,8 @@ var Game = (function () {
             if (currentTurn >= players.length) {
                 currentTurn = 0;
             }
-            nextTurn();
+
+            setTimeout(nextTurn, 1500);
         }
     }
 
@@ -176,6 +184,8 @@ function Player(options) {
     this.direction = null;
     this.indicator = null;
 
+    // TODO adjust fireForceFactor to ensure the other player is always hitable
+    this.fireForceFactor = 2;
     this.fireForce = 0;
     this.fireButtonTimeout = null;
 
@@ -234,7 +244,7 @@ function Player(options) {
 
         console.log("Player.fire()", force);
 
-        projectile.direction = this.getIndicator().multiplyScalar(force); //new THREE.Vector3(0.5, 0.5, 0);
+        projectile.direction = this.getIndicator().multiplyScalar(force).multiplyScalar(this.fireForceFactor); //new THREE.Vector3(0.5, 0.5, 0);
         projectile.mass = 0.151;
         projectile.setPosition(this.position.clone());
 
@@ -557,6 +567,8 @@ var Projectile = function () {
         this.obj.translateX(move.x);
         this.obj.translateY(move.y);
         this.obj.translateZ(move.z);
+
+        $(window).trigger("PROJECTILE_MOVE", { position: this.position });
     };
 
 
@@ -730,8 +742,8 @@ Terrain = function() {
 
     var width = 400,
         height = 400,
-        widthSegments = 60,
-        heightSegments = 60,
+        widthSegments = 400,
+        heightSegments = 400,
         geometry, // the main plain
 
         // area of the main plain that has actual game stuff happening in it
@@ -740,7 +752,9 @@ Terrain = function() {
 
         shaded,
         wire,
-        effects;
+        effects,
+
+        noise;
 
 
     //init();
@@ -751,11 +765,22 @@ Terrain = function() {
      * @returns {THREE.Mesh}
      */
     this.init = function () {
+
+        noise = new Noise(Math.random());
+        //console.log("NOISE", noise);
+
+
         geometry = new THREE.PlaneGeometry(width, height, widthSegments, heightSegments);
         for (var v = 0; v < geometry.vertices.length; v++) {
-            geometry.vertices[v].z += Math.random() * 2;
-            geometry.vertices[v].x += Math.random() - 0.5;
-            geometry.vertices[v].y += Math.random() - 0.5;
+
+            var x = geometry.vertices[v].x;
+            var y = geometry.vertices[v].y;
+
+            // layer different frequency noise link suggested here: http://stackoverflow.com/a/12627930/999162
+            geometry.vertices[v].z += noise.perlin2(x, y) + noise.perlin2(x / 2, y / 2) + 4 * noise.perlin2(x / 8, y / 8) +
+                16 * noise.perlin2(x / 32, y / 32);
+            geometry.vertices[v].x += noise.perlin2(x, y);
+            geometry.vertices[v].y += noise.perlin2(x, y);
         }
         geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
         geometry.verticesNeedUpdate = true;
@@ -765,7 +790,7 @@ Terrain = function() {
 
         shaded = new THREE.Mesh(geometry, material);
         shaded.userData = { name: "shaded" };
-        wire = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x111111, wireframe: true, wireframeLinewidth: 0.5 }));
+        wire = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x999999, wireframe: true, wireframeLinewidth: 0.5 }));
         wire.userData.name = "wire";
         effects = new THREE.Object3D();
         effects.userData.name = "effects";

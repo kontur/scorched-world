@@ -58,6 +58,8 @@ var Projectile = function () {
         this.obj.translateX(move.x);
         this.obj.translateY(move.y);
         this.obj.translateZ(move.z);
+
+        $(window).trigger("PROJECTILE_MOVE", { position: this.position });
     };
 
 

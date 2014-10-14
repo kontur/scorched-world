@@ -12,6 +12,11 @@ var CameraManager = (function () {
 
     var init = function () {
         camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 150);
+
+        $(window).on("PROJECTILE_MOVE", function (e, data) {
+            camera.lookAt(data.position);
+            lookAt = data.position;
+        });
     };
 
 

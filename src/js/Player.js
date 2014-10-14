@@ -20,6 +20,8 @@ function Player(options) {
     this.direction = null;
     this.indicator = null;
 
+    // TODO adjust fireForceFactor to ensure the other player is always hitable
+    this.fireForceFactor = 2;
     this.fireForce = 0;
     this.fireButtonTimeout = null;
 
@@ -78,7 +80,7 @@ function Player(options) {
 
         console.log("Player.fire()", force);
 
-        projectile.direction = this.getIndicator().multiplyScalar(force); //new THREE.Vector3(0.5, 0.5, 0);
+        projectile.direction = this.getIndicator().multiplyScalar(force).multiplyScalar(this.fireForceFactor); //new THREE.Vector3(0.5, 0.5, 0);
         projectile.mass = 0.151;
         projectile.setPosition(this.position.clone());
 

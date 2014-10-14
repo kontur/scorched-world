@@ -36,9 +36,11 @@ var Game = (function () {
 
         $(window).on("PROJECTILE_IMPACT", updateDamage);
         var pos = players[currentTurn].position.clone();
+
+        //TODO instead of x,z -15 those should be behind the player facing the direction of other players
         pos.x -= 15;
         pos.z -= 15;
-        pos.y = 15;
+        pos.y = 25;
         CameraManager.animateTo(pos, players[currentTurn].position);
 
         if (players[currentTurn].isHuman) {
@@ -63,7 +65,8 @@ var Game = (function () {
             if (currentTurn >= players.length) {
                 currentTurn = 0;
             }
-            nextTurn();
+
+            setTimeout(nextTurn, 1500);
         }
     }
 

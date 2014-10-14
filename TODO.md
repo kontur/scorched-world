@@ -12,6 +12,7 @@
 * player position centerish on the map and not too close to each other
 * player controls for firing projectiles
 * player / AI visual distinction
+* AI mustn't shoot into immediate surrounding terrain walls (kill itself) > base random rotation on average face normal
 * better noise based terrain generation
 
 ####Low priority cool to have
