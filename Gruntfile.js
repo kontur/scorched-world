@@ -69,6 +69,12 @@ module.exports = function(grunt) {
             }
         }
     },
+      todo: {
+          options: {
+              file: 'TODO-compiled.md'
+          },
+          src: ['src/js/*.js', 'src/less/*.less']
+      },
     watch: {
       gruntfile: {
         files: '<%= jshint.gruntfile.src %>',
@@ -76,11 +82,11 @@ module.exports = function(grunt) {
       },
       js: {
         files: 'src/js/*.js',
-        tasks: ['concat', 'uglify']
+        tasks: ['concat', 'uglify', 'todo']
       },
       less: {
         files: 'src/less/*.less',
-        tasks: ['less']
+        tasks: ['less', 'todo']
       }
     }
   });
@@ -91,6 +97,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-less');
+    grunt.loadNpmTasks('grunt-todo');
 
   // Default task.
   grunt.registerTask('default', ['jshint', 'concat', 'uglify']);
