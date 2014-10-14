@@ -7,7 +7,6 @@ var Scene = (function () {
         camera,
         renderer,
         projectiles,
-        player,
         terrain;
 
 
@@ -60,24 +59,16 @@ var Scene = (function () {
     /**
      * adding player object representations to the scene
      */
-    var addPlayer = function (playerObj) {
-        scene.add(playerObj.obj);
+    var addPlayer = function (player) {
+        scene.add(player.obj);
 
-        //camera.translateX(playerObj.position.x + 0);
-        //camera.translateZ(playerObj.position.z + 0);
-        //camera.position.y = 25;
-        //camera.lookAt(playerObj.position);
-
-
-        $(playerObj).on("PROJECTILE_FIRED", function (e, projectile) {
+        $(player).on("PROJECTILE_FIRED", function (e, projectile) {
             addProjectile(projectile);
         });
-        player = playerObj;
 
-
-        // DEBUG
-        scene.add(playerObj.indicator);
-        console.log("addPlayer", playerObj.indicator);
+        // DEBUG / visual helper
+        scene.add(player.indicator);
+        scene.add(player.bbox);
     };
 
 
@@ -90,15 +81,34 @@ var Scene = (function () {
     function render() {
         requestAnimationFrame(render);
 
+        var players = Game.getPlayers();
+
         if (projectiles && projectiles.length) {
             //TODO projectile terrain / player hit detection
-            for (p in projectiles) {
+            for (var p in projectiles) {
                 projectiles[p].applyForce(gravity);
                 projectiles[p].update();
 
 
-                if (projectiles[p].checkPlaneCollision(terrain.objForHittest)) {
-                    terrain.showImpact(projectiles[p].getPlaneCollision()[0]);
+                console.log("Players", players);
+                for (var player in players) {
+                    var hit = projectiles[p].checkPlayerCollision(players[player]);
+                    if (hit != false) {
+                        scene.remove(projectiles[p].obj);
+                        projectiles = [];
+
+                        // NOTE this just emulates the {} hit object, but does not correspond to a similar object as if
+                        // returned from raycaster.intersectObject; could use the hit THREE.Vector3 and cast a ray from
+                        // y = 100 down to get the actual hit (on the player object)
+                        $(window).trigger("PROJECTILE_IMPACT", { hit: { point: hit } });
+                        terrain.showImpact(hit, 0xff0000);
+
+                        break;
+                    }
+                }
+
+                if (projectiles[p] && projectiles[p].checkPlaneCollision(terrain.objForHittest)) {
+                    terrain.showImpact(projectiles[p].getPlaneCollision()[0].point, 0x333333);
 
                     // TODO BAD practise to have this event trigger on window :/
                     // maybe need to make Scene a object after all
@@ -106,14 +116,9 @@ var Scene = (function () {
 
                     scene.remove(projectiles[p].obj);
                     projectiles = [];
-                }
 
-                //TODO more complex projectile delete logic based on terrain bounding box
-                //if (projectiles[p].position.y < -10) {
-                //    scene.remove(projectiles[p].obj);
-                //    //TODO don't just empty the array, but pluck this projectile, in case there later are more than 1
-                //    projectiles = [];
-                //}
+                    break;
+                }
             }
         }
 

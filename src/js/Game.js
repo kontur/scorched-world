@@ -73,6 +73,9 @@ var Game = (function () {
 
     return {
         start: start,
-        reset: start
+        reset: start,
+        getPlayers: function () {
+            return players;
+        }
     };
 })();

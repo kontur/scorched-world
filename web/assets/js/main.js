@@ -164,7 +164,10 @@ var Game = (function () {
 
     return {
         start: start,
-        reset: start
+        reset: start,
+        getPlayers: function () {
+            return players;
+        }
     };
 })();
 function Player(options) {
@@ -181,6 +184,7 @@ function Player(options) {
 
     this.position = null; // Vector3
     this.mesh = null; // Three mesh
+    this.bbox = null;
     this.direction = null;
     this.indicator = null;
 
@@ -207,6 +211,9 @@ function Player(options) {
         this.obj.add(this.canon);
         this.canon.rotateX(45 * Math.PI / 180);
         this.canon.rotationAutoUpdate;
+
+        this.bbox = new THREE.BoundingBoxHelper(this.obj, 0xff0000);
+        this.bbox.update();
     };
 
 
@@ -226,6 +233,8 @@ function Player(options) {
         geom.vertices.push(new THREE.Vector3(this.position.x, 10, this.position.z));
         var mat = new THREE.LineBasicMaterial({ color: 0xff0000 });
         this.indicator = new THREE.Line(geom, mat);
+
+        this.bbox.update();
     };
 
 
@@ -240,13 +249,18 @@ function Player(options) {
      * TODO projectile mass has no effect
      */
     this.fire = function (force) {
-        var projectile = new Projectile();
-
         console.log("Player.fire()", force);
 
-        projectile.direction = this.getIndicator().multiplyScalar(force).multiplyScalar(this.fireForceFactor); //new THREE.Vector3(0.5, 0.5, 0);
-        projectile.mass = 0.151;
-        projectile.setPosition(this.position.clone());
+        var direction = this.getIndicator().multiplyScalar(force).multiplyScalar(this.fireForceFactor); //new THREE.Vector3(0.5, 0.5, 0);
+        var mass = 0.151;
+        //projectile.setPosition(this.position.clone());
+        var player = this;
+
+        var projectile = new Projectile({
+            direction: direction,
+            mass: mass,
+            player: this
+        });
 
         $(this).trigger("PROJECTILE_FIRED", projectile);
     };
@@ -264,6 +278,9 @@ function Player(options) {
 
         console.log("Player.addAngle()", this.canon.rotation.x);
         this.getIndicator();
+        this.bbox.update();
+
+        this.checkTangent(Scene.getTerrain().objForHittest);
     };
 
 
@@ -277,6 +294,9 @@ function Player(options) {
 
         console.log("Player.addRotation", this.obj.rotation.y);
         this.getIndicator();
+        this.bbox.update();
+
+        this.checkTangent(Scene.getTerrain().objForHittest);
     };
 
 
@@ -336,7 +356,13 @@ function Player(options) {
         //this.indicator.add(new THREE.Line(geom, mat));
 
         return direction;
-    }
+    };
+
+
+    this.checkTangent = function (object) {
+        var raycaster = new THREE.Raycaster(this.position, this.getIndicator().multiplyScalar(10));
+        console.log("Player.checkTangent", raycaster.intersectObject(object));
+    };
 }
 
 
@@ -489,12 +515,20 @@ function AIPlayer(options) {
     };
 
 
+    //TODO make this an actual animation, not just a plain set operation
     this.animateTo = function (rotationH, rotationV) {
         this.canon.rotateX(rotationV);
         this.obj.rotateY(rotationH);
+        this.bbox.update();
+
+        this.checkTangent(Scene.getTerrain().objForHittest);
     };
 
 
+    //TODO take the distance from this player to target, then cycle through provious shots, take the one with closest distance
+    // as a basis and then apply a random factor to the settings of that shot; the closer the distance in percent
+    // the less random variation should go into the next shot; i.e. the closer it is already, the more circling to the
+    // accurate position will happen
     this.guessShot = function (rotationHLimits, rotationVLimits, forceLimits) {
 
         var rotationH = Math.random() * Math.PI;
@@ -512,10 +546,13 @@ function AIPlayer(options) {
 
 AIPlayer.prototype = new Player();
 AIPlayer.constructor = AIPlayer;
-var Projectile = function () {
+var Projectile = function (options) {
+
     var geometry = new THREE.SphereGeometry(0.25, 4, 4);
     var material = new THREE.MeshBasicMaterial({ color: 0xff00ff });
     var mesh = new THREE.Mesh(geometry, material);
+
+    var offsetY = 1;
 
     // collision check helpers
     // make reusable raycasting objects so they don't have to be recreated every frame
@@ -523,16 +560,36 @@ var Projectile = function () {
     var raycasterDirection = new THREE.Vector3(0, -1, 0);
     var raycaster = new THREE.Raycaster(this.position, raycasterDirection);
 
-    this.mass = 0.1;
-    this.direction = new THREE.Vector3(0, 0, 0);
-    this.position = new THREE.Vector3(0, 0, 0);
-
+    //this.mass = 0.1;
+    //
+    //this.direction = new THREE.Vector3(0, 0, 0);
+    //this.position = new THREE.Vector3(0, 0, 0);
     //TODO implement drag factor into update
     this.drag = 0.01;
 
     this.obj = new THREE.Object3D();
+
     this.obj.add(mesh);
     this.obj.position = new THREE.Vector3(0, 0, 0);
+
+    this.playerOrigin = null;
+    var hasExitedPlayerOrigin = false;
+
+
+    var defaults = {
+        mass: 0.1,
+        direction: new THREE.Vector3(0, 0, 0),
+        player: null
+    };
+
+    var options = $.extend(defaults, options);
+
+    this.position = options.player.position.clone();
+
+    // TODO this is a dirty hack to not get the player hit its immediate surroundings nor its own bounding box
+    this.position.y += offsetY;
+
+    console.log("Projectile()", options);
 
 
 
@@ -542,19 +599,7 @@ var Projectile = function () {
      * @param force
      */
     this.applyForce = function (force) {
-        this.direction = this.direction.add(force.direction.clone().multiplyScalar(1 + this.mass));
-    };
-
-
-    /**
-     * Explicitly set the projectiles position
-     *
-     * NOTE: only after adding mesh to scene
-     *
-     * @param position
-     */
-    this.setPosition = function (position) {
-        this.position = position;
+        options.direction = options.direction.add(force.direction.clone().multiplyScalar(1 + options.mass));
     };
 
 
@@ -562,7 +607,7 @@ var Projectile = function () {
      * Move the projectile after applying movement momentum
      */
     this.update = function () {
-        this.position = this.position.add(this.direction);
+        this.position = this.position.add(options.direction);
         var move = new THREE.Vector3().subVectors(this.position, this.obj.position);
         this.obj.translateX(move.x);
         this.obj.translateY(move.y);
@@ -572,6 +617,15 @@ var Projectile = function () {
     };
 
 
+    /**
+     * Checks if @param plane geometry has been hit yet
+     *
+     * @param plane
+     * @returns {boolean}
+     *
+     * TODO right now this works by shooting a ray down the z axis, but more ideally this would be a ray to the next
+     * closest face of plane with the negative direction of that face's normal
+     */
     this.checkPlaneCollision = function (plane) {
         // update the raycaster position to cast a ray straight down from the current projectile position
         raycaster.set(this.position, raycasterDirection);
@@ -599,9 +653,28 @@ var Projectile = function () {
     };
 
 
+    /**
+     * Helper to access the last triggered plane collision result array (with intersect objects)
+     *
+     * @returns {*}
+     */
     this.getPlaneCollision = function () {
         console.log("Projectile.getPlaneCollision", lastResult);
         return lastResult ? lastResult : false;
+    };
+
+
+    this.checkPlayerCollision = function (player) {
+        // for now, detect intersection of the player object's bounding sphere
+
+        // TODO this now only checks if the position of the projectile is in the bounding box of the player target
+        // ideally, this would be projectile geometry, or projectile bounding box, or projectile position plus radius
+        if (Utils.PointInBox(this.position, player.bbox.box)) {
+            return this.position;
+        } else {
+            return false;
+        }
+
     };
 };
 
@@ -611,7 +684,6 @@ var Scene = (function () {
         camera,
         renderer,
         projectiles,
-        player,
         terrain;
 
 
@@ -664,24 +736,16 @@ var Scene = (function () {
     /**
      * adding player object representations to the scene
      */
-    var addPlayer = function (playerObj) {
-        scene.add(playerObj.obj);
+    var addPlayer = function (player) {
+        scene.add(player.obj);
 
-        //camera.translateX(playerObj.position.x + 0);
-        //camera.translateZ(playerObj.position.z + 0);
-        //camera.position.y = 25;
-        //camera.lookAt(playerObj.position);
-
-
-        $(playerObj).on("PROJECTILE_FIRED", function (e, projectile) {
+        $(player).on("PROJECTILE_FIRED", function (e, projectile) {
             addProjectile(projectile);
         });
-        player = playerObj;
 
-
-        // DEBUG
-        scene.add(playerObj.indicator);
-        console.log("addPlayer", playerObj.indicator);
+        // DEBUG / visual helper
+        scene.add(player.indicator);
+        scene.add(player.bbox);
     };
 
 
@@ -694,15 +758,34 @@ var Scene = (function () {
     function render() {
         requestAnimationFrame(render);
 
+        var players = Game.getPlayers();
+
         if (projectiles && projectiles.length) {
             //TODO projectile terrain / player hit detection
-            for (p in projectiles) {
+            for (var p in projectiles) {
                 projectiles[p].applyForce(gravity);
                 projectiles[p].update();
 
 
-                if (projectiles[p].checkPlaneCollision(terrain.objForHittest)) {
-                    terrain.showImpact(projectiles[p].getPlaneCollision()[0]);
+                console.log("Players", players);
+                for (var player in players) {
+                    var hit = projectiles[p].checkPlayerCollision(players[player]);
+                    if (hit != false) {
+                        scene.remove(projectiles[p].obj);
+                        projectiles = [];
+
+                        // NOTE this just emulates the {} hit object, but does not correspond to a similar object as if
+                        // returned from raycaster.intersectObject; could use the hit THREE.Vector3 and cast a ray from
+                        // y = 100 down to get the actual hit (on the player object)
+                        $(window).trigger("PROJECTILE_IMPACT", { hit: { point: hit } });
+                        terrain.showImpact(hit, 0xff0000);
+
+                        break;
+                    }
+                }
+
+                if (projectiles[p] && projectiles[p].checkPlaneCollision(terrain.objForHittest)) {
+                    terrain.showImpact(projectiles[p].getPlaneCollision()[0].point, 0x333333);
 
                     // TODO BAD practise to have this event trigger on window :/
                     // maybe need to make Scene a object after all
@@ -710,14 +793,9 @@ var Scene = (function () {
 
                     scene.remove(projectiles[p].obj);
                     projectiles = [];
-                }
 
-                //TODO more complex projectile delete logic based on terrain bounding box
-                //if (projectiles[p].position.y < -10) {
-                //    scene.remove(projectiles[p].obj);
-                //    //TODO don't just empty the array, but pluck this projectile, in case there later are more than 1
-                //    projectiles = [];
-                //}
+                    break;
+                }
             }
         }
 
@@ -754,7 +832,8 @@ Terrain = function() {
         wire,
         effects,
 
-        noise;
+        noise,
+        playerOffsetY = 1;
 
 
     //init();
@@ -790,7 +869,7 @@ Terrain = function() {
 
         shaded = new THREE.Mesh(geometry, material);
         shaded.userData = { name: "shaded" };
-        wire = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x999999, wireframe: true, wireframeLinewidth: 0.5 }));
+        wire = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true, wireframeLinewidth: 0.5 }));
         wire.userData.name = "wire";
         effects = new THREE.Object3D();
         effects.userData.name = "effects";
@@ -842,6 +921,7 @@ Terrain = function() {
                     //TODO and b) make sure there is minimumDistance (percent of main area) between the players
                 }
             }
+            position.y += playerOffsetY;
             pos.push(position);
         }
         this.playerPositions = pos;
@@ -890,10 +970,10 @@ Terrain = function() {
      *
      * @param intersectResult - Object returned by THREE.Raycaster.intersectObject
      */
-    this.showImpact = function (intersectResult) {
+    this.showImpact = function (point, color) {
         var geometry = new THREE.SphereGeometry(1, 4, 4);
-        geometry.applyMatrix(new THREE.Matrix4().setPosition(intersectResult.point));
-        var material = new THREE.MeshBasicMaterial({ color: 0xff3300 });
+        geometry.applyMatrix(new THREE.Matrix4().setPosition(point));
+        var material = new THREE.MeshBasicMaterial({ color: color });
         var mesh = new THREE.Mesh(geometry, material);
         Utils.Object3DgetChildByName(this.obj, "effects").add(mesh);
     }
@@ -925,8 +1005,8 @@ var UI = (function () {
 
     function startGame() {
         var players = [
-            //new HumanPlayer({ color: 0x00ff00, name: "Foobar"}),
-            new AIPlayer({ color: 0xff00ff, name: "Foobar" }),
+            new HumanPlayer({ color: 0x00ff00, name: "Foobar"}),
+            //new AIPlayer({ color: 0xff00ff, name: "Foobar" }),
             new AIPlayer({ color: 0xff6600, difficulty: 0, name: "Robert the Robot" })
         ];
 
@@ -934,7 +1014,8 @@ var UI = (function () {
     }
 
     return {
-        init: init
+        init: init,
+        startGame: startGame
     };
 
 })();
@@ -953,7 +1034,7 @@ var Utils = (function () {
          *
          * TODO implement recursive search and recursive depth
          */
-        Object3DgetChildByName: function (object3d, name) {
+        Object3DgetChildByName: function(object3d, name) {
             console.log(object3d, name);
             for (child in object3d.children) {
                 if (object3d.children[child].userData && object3d.children[child].userData.name &&
@@ -963,6 +1044,20 @@ var Utils = (function () {
                 }
             }
             return false;
+        },
+
+
+        PointInBox: function(point, box) {
+            var inside = (
+                point.x > box.min.x &&
+                point.x < box.max.x &&
+                point.y > box.min.y &&
+                point.y < box.max.y &&
+                point.z > box.min.z &&
+                point.z < box.max.z
+            );
+
+            return inside;
         }
     };
 }());
@@ -970,5 +1065,6 @@ var Utils = (function () {
 $(function() {
 
     UI.init();
+    UI.startGame();
 
 });

@@ -20,7 +20,8 @@ Terrain = function() {
         wire,
         effects,
 
-        noise;
+        noise,
+        playerOffsetY = 1;
 
 
     //init();
@@ -56,7 +57,7 @@ Terrain = function() {
 
         shaded = new THREE.Mesh(geometry, material);
         shaded.userData = { name: "shaded" };
-        wire = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x999999, wireframe: true, wireframeLinewidth: 0.5 }));
+        wire = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true, wireframeLinewidth: 0.5 }));
         wire.userData.name = "wire";
         effects = new THREE.Object3D();
         effects.userData.name = "effects";
@@ -108,6 +109,7 @@ Terrain = function() {
                     //TODO and b) make sure there is minimumDistance (percent of main area) between the players
                 }
             }
+            position.y += playerOffsetY;
             pos.push(position);
         }
         this.playerPositions = pos;
@@ -156,10 +158,10 @@ Terrain = function() {
      *
      * @param intersectResult - Object returned by THREE.Raycaster.intersectObject
      */
-    this.showImpact = function (intersectResult) {
+    this.showImpact = function (point, color) {
         var geometry = new THREE.SphereGeometry(1, 4, 4);
-        geometry.applyMatrix(new THREE.Matrix4().setPosition(intersectResult.point));
-        var material = new THREE.MeshBasicMaterial({ color: 0xff3300 });
+        geometry.applyMatrix(new THREE.Matrix4().setPosition(point));
+        var material = new THREE.MeshBasicMaterial({ color: color });
         var mesh = new THREE.Mesh(geometry, material);
         Utils.Object3DgetChildByName(this.obj, "effects").add(mesh);
     }

@@ -15,7 +15,7 @@ var Utils = (function () {
          *
          * TODO implement recursive search and recursive depth
          */
-        Object3DgetChildByName: function (object3d, name) {
+        Object3DgetChildByName: function(object3d, name) {
             console.log(object3d, name);
             for (child in object3d.children) {
                 if (object3d.children[child].userData && object3d.children[child].userData.name &&
@@ -25,6 +25,20 @@ var Utils = (function () {
                 }
             }
             return false;
+        },
+
+
+        PointInBox: function(point, box) {
+            var inside = (
+                point.x > box.min.x &&
+                point.x < box.max.x &&
+                point.y > box.min.y &&
+                point.y < box.max.y &&
+                point.z > box.min.z &&
+                point.z < box.max.z
+            );
+
+            return inside;
         }
     };
 }());

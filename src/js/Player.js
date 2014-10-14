@@ -17,6 +17,7 @@ function Player(options) {
 
     this.position = null; // Vector3
     this.mesh = null; // Three mesh
+    this.bbox = null;
     this.direction = null;
     this.indicator = null;
 
@@ -43,6 +44,9 @@ function Player(options) {
         this.obj.add(this.canon);
         this.canon.rotateX(45 * Math.PI / 180);
         this.canon.rotationAutoUpdate;
+
+        this.bbox = new THREE.BoundingBoxHelper(this.obj, 0xff0000);
+        this.bbox.update();
     };
 
 
@@ -62,6 +66,8 @@ function Player(options) {
         geom.vertices.push(new THREE.Vector3(this.position.x, 10, this.position.z));
         var mat = new THREE.LineBasicMaterial({ color: 0xff0000 });
         this.indicator = new THREE.Line(geom, mat);
+
+        this.bbox.update();
     };
 
 
@@ -76,13 +82,18 @@ function Player(options) {
      * TODO projectile mass has no effect
      */
     this.fire = function (force) {
-        var projectile = new Projectile();
-
         console.log("Player.fire()", force);
 
-        projectile.direction = this.getIndicator().multiplyScalar(force).multiplyScalar(this.fireForceFactor); //new THREE.Vector3(0.5, 0.5, 0);
-        projectile.mass = 0.151;
-        projectile.setPosition(this.position.clone());
+        var direction = this.getIndicator().multiplyScalar(force).multiplyScalar(this.fireForceFactor); //new THREE.Vector3(0.5, 0.5, 0);
+        var mass = 0.151;
+        //projectile.setPosition(this.position.clone());
+        var player = this;
+
+        var projectile = new Projectile({
+            direction: direction,
+            mass: mass,
+            player: this
+        });
 
         $(this).trigger("PROJECTILE_FIRED", projectile);
     };
@@ -100,6 +111,9 @@ function Player(options) {
 
         console.log("Player.addAngle()", this.canon.rotation.x);
         this.getIndicator();
+        this.bbox.update();
+
+        this.checkTangent(Scene.getTerrain().objForHittest);
     };
 
 
@@ -113,6 +127,9 @@ function Player(options) {
 
         console.log("Player.addRotation", this.obj.rotation.y);
         this.getIndicator();
+        this.bbox.update();
+
+        this.checkTangent(Scene.getTerrain().objForHittest);
     };
 
 
@@ -172,7 +189,13 @@ function Player(options) {
         //this.indicator.add(new THREE.Line(geom, mat));
 
         return direction;
-    }
+    };
+
+
+    this.checkTangent = function (object) {
+        var raycaster = new THREE.Raycaster(this.position, this.getIndicator().multiplyScalar(10));
+        console.log("Player.checkTangent", raycaster.intersectObject(object));
+    };
 }
 
 
@@ -325,12 +348,20 @@ function AIPlayer(options) {
     };
 
 
+    //TODO make this an actual animation, not just a plain set operation
     this.animateTo = function (rotationH, rotationV) {
         this.canon.rotateX(rotationV);
         this.obj.rotateY(rotationH);
+        this.bbox.update();
+
+        this.checkTangent(Scene.getTerrain().objForHittest);
     };
 
 
+    //TODO take the distance from this player to target, then cycle through provious shots, take the one with closest distance
+    // as a basis and then apply a random factor to the settings of that shot; the closer the distance in percent
+    // the less random variation should go into the next shot; i.e. the closer it is already, the more circling to the
+    // accurate position will happen
     this.guessShot = function (rotationHLimits, rotationVLimits, forceLimits) {
 
         var rotationH = Math.random() * Math.PI;

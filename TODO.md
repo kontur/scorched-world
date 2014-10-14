@@ -14,13 +14,14 @@
 * player / AI visual distinction
 * AI mustn't shoot into immediate surrounding terrain walls (kill itself) > base random rotation on average face normal
 * better noise based terrain generation
+* refactor event system and avoid having events on $(window)
 
 ####Low priority cool to have
 * seemingly endless terrain around the arena
 * player models imported form obj files
 * aiming guide vectors / trajectories
 * player names / life hovering above player objects
-
+* world environment (wind, fog) a) visually and b) affecting ballistics
 
 ##Game flow
 * As long as neither player is below 0 life:
