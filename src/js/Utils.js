@@ -16,7 +16,6 @@ var Utils = (function () {
          * TODO implement recursive search and recursive depth
          */
         Object3DgetChildByName: function(object3d, name) {
-            console.log(object3d, name);
             for (child in object3d.children) {
                 if (object3d.children[child].userData && object3d.children[child].userData.name &&
                     object3d.children[child].userData.name == name)

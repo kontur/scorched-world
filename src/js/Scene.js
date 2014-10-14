@@ -84,35 +84,44 @@ var Scene = (function () {
         var players = Game.getPlayers();
 
         if (projectiles && projectiles.length) {
-            //TODO projectile terrain / player hit detection
             for (var p in projectiles) {
                 projectiles[p].applyForce(gravity);
                 projectiles[p].update();
 
-
-                console.log("Players", players);
                 for (var player in players) {
-                    var hit = projectiles[p].checkPlayerCollision(players[player]);
-                    if (hit != false) {
+                    var playerHit = projectiles[p].checkPlayerCollision(players[player]);
+                    if (playerHit != false) {
                         scene.remove(projectiles[p].obj);
                         projectiles = [];
 
                         // NOTE this just emulates the {} hit object, but does not correspond to a similar object as if
                         // returned from raycaster.intersectObject; could use the hit THREE.Vector3 and cast a ray from
                         // y = 100 down to get the actual hit (on the player object)
-                        $(window).trigger("PROJECTILE_IMPACT", { hit: { point: hit } });
-                        terrain.showImpact(hit, 0xff0000);
+                        $(window).trigger("PROJECTILE_IMPACT", { point: playerHit });
+                        terrain.showImpact(playerHit, 0xff0000);
 
                         break;
                     }
                 }
 
                 if (projectiles[p] && projectiles[p].checkPlaneCollision(terrain.objForHittest)) {
-                    terrain.showImpact(projectiles[p].getPlaneCollision()[0].point, 0x333333);
+
+                    var planeHit = projectiles[p].getPlaneCollision();
+
+                    if (!planeHit) {
+                        // this can happen when a projectile falls "through" the terrain mesh or is shot from under it
+
+                        //TODO low priority: instead of just using the projectile position, aquire a definite terrain
+                        // hit position by taking the projectile position and casting a ray along the y axis to hit
+                        // the terrain
+                        planeHit = projectiles[p].position;
+                    }
+
+                    terrain.showImpact(planeHit, 0x333333);
 
                     // TODO BAD practise to have this event trigger on window :/
                     // maybe need to make Scene a object after all
-                    $(window).trigger("PROJECTILE_IMPACT", { hit: projectiles[p].getPlaneCollision()[0] });
+                    $(window).trigger("PROJECTILE_IMPACT", { point: planeHit });
 
                     scene.remove(projectiles[p].obj);
                     projectiles = [];

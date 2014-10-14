@@ -123,21 +123,23 @@ Terrain = function() {
     };
 
 
+    /**
+     * Find the next closest player from @param position (while ignoring @param excludePosition)
+     *
+     * @param position THREE.Vector3
+     * @param excludePosition THREE.Vector3
+     * @returns {{position: THREE.Vector3, distance: number}}
+     */
     this.closestOtherPlayer = function (position, excludePosition) {
-        console.log("Terrain.closestOtherPlayer", position, excludePosition, position.x);
-
-        if (isNaN(position.x)) {
-            return false;
-        }
-
-        // TODO work around this magic number
-        var closest = 99999999;
+        console.log("Terrain.closestOtherPlayer()", position, excludePosition);
+        var closest = null;
         var closestPos = null;
         for (pos in this.playerPositions) {
             if (this.playerPositions[pos] != excludePosition) {
                 var distance = position.distanceTo(this.playerPositions[pos]);
-                if (distance < closest) {
+                if (closest === null || distance < closest) {
                     closestPos = this.playerPositions[pos];
+                    closest = distance;
                 }
             }
         }

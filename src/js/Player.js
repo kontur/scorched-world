@@ -26,6 +26,7 @@ function Player(options) {
     this.fireForce = 0;
     this.fireButtonTimeout = null;
 
+
     this.init = function () {
         console.log("Player.init()", this.options.color);
         var geometry = new THREE.IcosahedronGeometry(1, 0);
@@ -109,7 +110,8 @@ function Player(options) {
             this.canon.rotateX(angleChange);
         }
 
-        console.log("Player.addAngle()", this.canon.rotation.x);
+        //console.log("Player.addAngle()", this.canon.rotation.x);
+
         this.getIndicator();
         this.bbox.update();
 
@@ -125,7 +127,8 @@ function Player(options) {
         // rotate the whole player object, not just the canon
         this.obj.rotateOnAxis(new THREE.Vector3(0, 1, 0), rotationChange);
 
-        console.log("Player.addRotation", this.obj.rotation.y);
+        //console.log("Player.addRotation", this.obj.rotation.y);
+
         this.getIndicator();
         this.bbox.update();
 
@@ -171,22 +174,15 @@ function Player(options) {
 
 
         // dev visualization only:
+        while (this.indicator.children.length > 5) {
+            this.indicator.children.shift();
+        }
+
         var g = new THREE.Geometry();
         g.vertices.push(this.position);
         g.vertices.push(this.position.clone().add(direction.clone().multiplyScalar(1 + forceIndicator * 5)));
         var m = new THREE.LineBasicMaterial({ color: "rgb(" + Math.round(forceIndicator * 255) + ", 0, 0)" });
         this.indicator.add(new THREE.Line(g, m));
-
-        while (this.indicator.children.length > 5) {
-            this.indicator.children.shift();
-        }
-
-        //directionH = directionH.multiplyScalar(5);
-        //var geom = new THREE.Geometry();
-        //geom.vertices.push(this.position);
-        //geom.vertices.push(this.position.clone().add(directionH));
-        //var mat = new THREE.LineBasicMaterial({ color: 0xff0000 });
-        //this.indicator.add(new THREE.Line(geom, mat));
 
         return direction;
     };
@@ -199,183 +195,3 @@ function Player(options) {
 }
 
 
-/**
- * Player subclass with input interaction for aiming and firing
- *
- * @constructor new HumanPlayer()
- */
-function HumanPlayer(options) {
-    console.log("HumanPlayer()");
-
-    var that = this;
-    this.isHuman = true;
-    this.controlsEnabled = false;
-    this.enableControls = function () {
-        this.controlsEnabled = true;
-        console.log("Player controls enabled");
-    };
-    this.disableControls = function () {
-        this.controlsEnabled = false;
-        console.log("Player controls disabled");
-    };
-
-    Player.call(this, options);
-
-    setupControls();
-
-
-    function setupControls () {
-        console.log("HumanPlayer.setupControls()");
-        $(window).on("keydown", onKeyDown);
-        $(window).on("keyup", onKeyUp);
-    }
-
-
-    /**
-     * TODO improve rotating by adding additive rotation speed when key pressed continuously
-     */
-    function onKeyDown(e) {
-        if (!that.controlsEnabled) {
-            return false;
-        }
-
-        var rotationStep = 5;
-
-        switch (e.keyCode) {
-            // arrow up
-            case 40:
-                that.addAngle(rotationStep * (Math.PI / 180));
-                break;
-
-            // arrow down
-            case 38:
-                that.addAngle(-rotationStep * (Math.PI / 180));
-                break;
-
-            // arrow left
-            case 39:
-                that.addRotation(-rotationStep * (Math.PI / 180));
-                break;
-
-            // arrow right
-            case 37:
-                that.addRotation(rotationStep * (Math.PI / 180));
-                break;
-
-            // space bar
-            case 32:
-                if (!that.fireButtonTimeout) {
-                    that.fireButtonTimeout = setTimeout(fireButtonDown, 5);
-                }
-                break;
-
-            default:
-                break;
-        }
-    }
-
-    function onKeyUp(e) {
-        if (!that.controlsEnabled) {
-            return false;
-        }
-
-        if (e.keyCode == "32") {
-            // spacebar was released
-
-            clearTimeout(that.fireButtonTimeout);
-            that.fire(that.fireForce / 100);
-            that.fireForce = 0;
-            that.fireButtonTimeout = false;
-        }
-    }
-
-
-    function fireButtonDown() {
-        that.fireForce++;
-        if (that.fireForce > 100) {
-            that.fireForce = 100;
-        }
-        that.fireButtonTimeout = setTimeout(fireButtonDown, 5);
-        that.getIndicator(Math.min(100, that.fireForce) / 100);
-    }
-}
-
-HumanPlayer.prototype = new Player();
-HumanPlayer.constructor = HumanPlayer;
-
-
-/**
- *
- * @param options
- * @constructor
- *
- * TODO player AI
- * TODO player AI difficulty
- * TODO automated aiming and firing animations
- */
-function AIPlayer(options) {
-    Player.call(this, options);
-
-    this.isHuman = false;
-
-    var shots = [];
-
-    this.autofire = function () {
-        var that = this;
-        setTimeout(function () {
-
-            var shot = that.guessShot([], [], []);
-
-            that.animateTo(shot.rotationH, shot.rotationV);
-
-            setTimeout(function () {
-                that.fire(shot.force);
-
-                $(window).on("PROJECTILE_IMPACT", function (e, data) {
-                    // get closest other player to impact
-                    console.log("AIPlayer.autofire", data);
-                    var closest= Scene.getTerrain().closestOtherPlayer(data.hit.point, that.position);
-                    shot.closest = data.hit.point.sub(closest);
-                });
-                console.log("shot:", shot);
-
-                shots.push(shot);
-
-                that.getIndicator();
-            }, 500);
-
-        }, 1000);
-    };
-
-
-    //TODO make this an actual animation, not just a plain set operation
-    this.animateTo = function (rotationH, rotationV) {
-        this.canon.rotateX(rotationV);
-        this.obj.rotateY(rotationH);
-        this.bbox.update();
-
-        this.checkTangent(Scene.getTerrain().objForHittest);
-    };
-
-
-    //TODO take the distance from this player to target, then cycle through provious shots, take the one with closest distance
-    // as a basis and then apply a random factor to the settings of that shot; the closer the distance in percent
-    // the less random variation should go into the next shot; i.e. the closer it is already, the more circling to the
-    // accurate position will happen
-    this.guessShot = function (rotationHLimits, rotationVLimits, forceLimits) {
-
-        var rotationH = Math.random() * Math.PI;
-        var rotationV = Math.random() * Math.PI / 2 - Math.PI / 4;
-        var force = Math.random() * 0.5 + 0.5;
-
-        return {
-            rotationH: rotationH,
-            rotationV: rotationV,
-            force: force
-        };
-    };
-
-};
-
-AIPlayer.prototype = new Player();
-AIPlayer.constructor = AIPlayer;

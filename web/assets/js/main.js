@@ -1,4 +1,4 @@
-/*!  - v - 2014-10-14
+/*!  - v - 2014-10-15
 * Copyright (c) 2014 Johannes Neumeier; Licensed  */
 var CameraManager = (function () {
 
@@ -170,6 +170,222 @@ var Game = (function () {
         }
     };
 })();
+function AIPlayer(options) {
+    Player.call(this, options);
+
+    this.isHuman = false;
+
+    var shots = [];
+
+    this.autofire = function () {
+        var that = this;
+        setTimeout(function () {
+
+            //console.log("shots", shots);
+
+            var closestDistance = null;
+            var closestShot = null;
+            if (shots.length) {
+                for (shot in shots) {
+                    //console.log("SHOT CLOSEST:", shots[shot].distance);
+                    if (closestDistance === null || shots[shot].distance < closestDistance) {
+                        closestShot = shots[shot];
+                    }
+                }
+            }
+
+            var shot = that.guessShot(closestShot);
+
+            that.animateTo(shot.rotationH, shot.rotationV);
+
+            setTimeout(function () {
+                that.fire(shot.force);
+
+                $(window).on("PROJECTILE_IMPACT", function (e, data) {
+                    // get closest other player to impact
+                    var closest = Scene.getTerrain().closestOtherPlayer(data.point, that.position);
+                    //console.log("closest", closest);
+                    shot.distance = closest.distance;
+                    shot.hit = closest.position;
+                    shots.push(shot);
+                    //console.log(shot);
+                    $(window).off("PROJECTILE_IMPACT");
+                });
+
+                that.getIndicator();
+            }, 500);
+
+        }, 1000);
+    };
+
+
+    //TODO make this an actual animation, not just a plain set operation
+    this.animateTo = function (rotationH, rotationV) {
+        this.canon.rotation.x = rotationV;
+        this.obj.rotation.y = rotationH;
+
+        this.bbox.update();
+
+        this.checkTangent(Scene.getTerrain().objForHittest);
+    };
+
+
+    //TODO take the distance from this player to target, then cycle through provious shots, take the one with closest distance
+    // as a basis and then apply a random factor to the settings of that shot; the closer the distance in percent
+    // the less random variation should go into the next shot; i.e. the closer it is already, the more circling to the
+    // accurate position will happen
+    this.guessShot = function (shot) {
+        var rotationH, rotationV, force;
+
+        if (shot !== null) {
+            //TODO factor of randomness based on a) difficulty and b) percentual distance to target of previous shot
+            // (shot.distance)
+
+            var closestOtherPlayerToBestHit = Scene.getTerrain().closestOtherPlayer(shot.hit, this.position);
+            //console.log("player to hit: ", closestOtherPlayerToBestHit);
+
+            var distanceToPlayer = this.position.distanceTo(closestOtherPlayerToBestHit.position);
+            console.log("distance to next player", distanceToPlayer);
+            console.log("---RATIO shot distance to distance to player", shot.distance / distanceToPlayer);
+
+            var factor = Math.max(shot.distance / distanceToPlayer, 0.01);
+
+            var randomH = Math.random() * Math.PI / 0.5 - Math.PI / 1 * factor * factor;
+            var randomV = Math.random() * Math.PI / 2 - Math.PI / 4 * factor * factor;
+            console.log("RANDOM", shot, randomH, randomV);
+            rotationH = shot.rotationH + randomH;
+            rotationV = shot.rotationV + randomV;
+            force = shot.force + Math.random() / 4;
+            //rotationH = shot.rotationH;
+            //rotationV = shot.rotationV;
+            //force = shot.force;
+        } else {
+            //TODO even without a reference shot, the first shot should, depending on difficulty level, still somewhat
+            // aim at the direction of another player
+            rotationH = Math.random() * Math.PI;
+            rotationV = Math.random() * Math.PI / 2 - Math.PI / 4;
+            force = Math.random() * 0.5 + 0.5;
+        }
+
+        //TODO clamp values to allowed orientations and forces - vertify these work as intended
+        rotationH = THREE.Math.clamp(rotationH, 0, Math.PI * 2);
+        rotationV = THREE.Math.clamp(rotationV, 0.25, Math.PI / 4); //?!
+        force = THREE.Math.clamp(force, 0.1, 1);
+
+        return {
+            rotationH: rotationH,
+            rotationV: rotationV,
+            force: force
+        };
+    };
+
+};
+
+AIPlayer.prototype = new Player();
+AIPlayer.constructor = AIPlayer;
+function HumanPlayer(options) {
+    console.log("HumanPlayer()");
+
+    Player.call(this, options);
+    setupControls();
+
+    var that = this;
+
+    this.isHuman = true;
+    this.controlsEnabled = false;
+
+
+    this.enableControls = function () {
+        this.controlsEnabled = true;
+        console.log("Player controls enabled");
+    };
+
+
+    this.disableControls = function () {
+        this.controlsEnabled = false;
+        console.log("Player controls disabled");
+    };
+
+    function setupControls () {
+        console.log("HumanPlayer.setupControls()");
+        $(window).on("keydown", onKeyDown);
+        $(window).on("keyup", onKeyUp);
+    }
+
+
+    /**
+     * TODO improve rotating by adding additive rotation speed when key pressed continuously
+     */
+    function onKeyDown(e) {
+        if (!that.controlsEnabled) {
+            return false;
+        }
+
+        var rotationStep = 5;
+
+        switch (e.keyCode) {
+            // arrow up
+            case 40:
+                that.addAngle(rotationStep * (Math.PI / 180));
+                break;
+
+            // arrow down
+            case 38:
+                that.addAngle(-rotationStep * (Math.PI / 180));
+                break;
+
+            // arrow left
+            case 39:
+                that.addRotation(-rotationStep * (Math.PI / 180));
+                break;
+
+            // arrow right
+            case 37:
+                that.addRotation(rotationStep * (Math.PI / 180));
+                break;
+
+            // space bar
+            case 32:
+                if (!that.fireButtonTimeout) {
+                    that.fireButtonTimeout = setTimeout(fireButtonDown, 5);
+                }
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    function onKeyUp(e) {
+        if (!that.controlsEnabled) {
+            return false;
+        }
+
+        if (e.keyCode == "32") {
+            // spacebar was released
+
+            clearTimeout(that.fireButtonTimeout);
+            that.fire(that.fireForce / 100);
+            that.fireForce = 0;
+            that.fireButtonTimeout = false;
+        }
+    }
+
+
+    function fireButtonDown() {
+        that.fireForce++;
+        if (that.fireForce > 100) {
+            that.fireForce = 100;
+        }
+        that.fireButtonTimeout = setTimeout(fireButtonDown, 5);
+        that.getIndicator(Math.min(100, that.fireForce) / 100);
+    }
+}
+
+HumanPlayer.prototype = new Player();
+HumanPlayer.constructor = HumanPlayer;
+
+
 function Player(options) {
 
     var defaults = {
@@ -192,6 +408,7 @@ function Player(options) {
     this.fireForceFactor = 2;
     this.fireForce = 0;
     this.fireButtonTimeout = null;
+
 
     this.init = function () {
         console.log("Player.init()", this.options.color);
@@ -276,7 +493,8 @@ function Player(options) {
             this.canon.rotateX(angleChange);
         }
 
-        console.log("Player.addAngle()", this.canon.rotation.x);
+        //console.log("Player.addAngle()", this.canon.rotation.x);
+
         this.getIndicator();
         this.bbox.update();
 
@@ -292,7 +510,8 @@ function Player(options) {
         // rotate the whole player object, not just the canon
         this.obj.rotateOnAxis(new THREE.Vector3(0, 1, 0), rotationChange);
 
-        console.log("Player.addRotation", this.obj.rotation.y);
+        //console.log("Player.addRotation", this.obj.rotation.y);
+
         this.getIndicator();
         this.bbox.update();
 
@@ -338,22 +557,15 @@ function Player(options) {
 
 
         // dev visualization only:
+        while (this.indicator.children.length > 5) {
+            this.indicator.children.shift();
+        }
+
         var g = new THREE.Geometry();
         g.vertices.push(this.position);
         g.vertices.push(this.position.clone().add(direction.clone().multiplyScalar(1 + forceIndicator * 5)));
         var m = new THREE.LineBasicMaterial({ color: "rgb(" + Math.round(forceIndicator * 255) + ", 0, 0)" });
         this.indicator.add(new THREE.Line(g, m));
-
-        while (this.indicator.children.length > 5) {
-            this.indicator.children.shift();
-        }
-
-        //directionH = directionH.multiplyScalar(5);
-        //var geom = new THREE.Geometry();
-        //geom.vertices.push(this.position);
-        //geom.vertices.push(this.position.clone().add(directionH));
-        //var mat = new THREE.LineBasicMaterial({ color: 0xff0000 });
-        //this.indicator.add(new THREE.Line(geom, mat));
 
         return direction;
     };
@@ -366,187 +578,17 @@ function Player(options) {
 }
 
 
-/**
- * Player subclass with input interaction for aiming and firing
- *
- * @constructor new HumanPlayer()
- */
-function HumanPlayer(options) {
-    console.log("HumanPlayer()");
 
-    var that = this;
-    this.isHuman = true;
-    this.controlsEnabled = false;
-    this.enableControls = function () {
-        this.controlsEnabled = true;
-        console.log("Player controls enabled");
-    };
-    this.disableControls = function () {
-        this.controlsEnabled = false;
-        console.log("Player controls disabled");
-    };
-
-    Player.call(this, options);
-
-    setupControls();
-
-
-    function setupControls () {
-        console.log("HumanPlayer.setupControls()");
-        $(window).on("keydown", onKeyDown);
-        $(window).on("keyup", onKeyUp);
-    }
-
-
-    /**
-     * TODO improve rotating by adding additive rotation speed when key pressed continuously
-     */
-    function onKeyDown(e) {
-        if (!that.controlsEnabled) {
-            return false;
-        }
-
-        var rotationStep = 5;
-
-        switch (e.keyCode) {
-            // arrow up
-            case 40:
-                that.addAngle(rotationStep * (Math.PI / 180));
-                break;
-
-            // arrow down
-            case 38:
-                that.addAngle(-rotationStep * (Math.PI / 180));
-                break;
-
-            // arrow left
-            case 39:
-                that.addRotation(-rotationStep * (Math.PI / 180));
-                break;
-
-            // arrow right
-            case 37:
-                that.addRotation(rotationStep * (Math.PI / 180));
-                break;
-
-            // space bar
-            case 32:
-                if (!that.fireButtonTimeout) {
-                    that.fireButtonTimeout = setTimeout(fireButtonDown, 5);
-                }
-                break;
-
-            default:
-                break;
-        }
-    }
-
-    function onKeyUp(e) {
-        if (!that.controlsEnabled) {
-            return false;
-        }
-
-        if (e.keyCode == "32") {
-            // spacebar was released
-
-            clearTimeout(that.fireButtonTimeout);
-            that.fire(that.fireForce / 100);
-            that.fireForce = 0;
-            that.fireButtonTimeout = false;
-        }
-    }
-
-
-    function fireButtonDown() {
-        that.fireForce++;
-        if (that.fireForce > 100) {
-            that.fireForce = 100;
-        }
-        that.fireButtonTimeout = setTimeout(fireButtonDown, 5);
-        that.getIndicator(Math.min(100, that.fireForce) / 100);
-    }
-}
-
-HumanPlayer.prototype = new Player();
-HumanPlayer.constructor = HumanPlayer;
-
-
-/**
- *
- * @param options
- * @constructor
- *
- * TODO player AI
- * TODO player AI difficulty
- * TODO automated aiming and firing animations
- */
-function AIPlayer(options) {
-    Player.call(this, options);
-
-    this.isHuman = false;
-
-    var shots = [];
-
-    this.autofire = function () {
-        var that = this;
-        setTimeout(function () {
-
-            var shot = that.guessShot([], [], []);
-
-            that.animateTo(shot.rotationH, shot.rotationV);
-
-            setTimeout(function () {
-                that.fire(shot.force);
-
-                $(window).on("PROJECTILE_IMPACT", function (e, data) {
-                    // get closest other player to impact
-                    console.log("AIPlayer.autofire", data);
-                    var closest= Scene.getTerrain().closestOtherPlayer(data.hit.point, that.position);
-                    shot.closest = data.hit.point.sub(closest);
-                });
-                console.log("shot:", shot);
-
-                shots.push(shot);
-
-                that.getIndicator();
-            }, 500);
-
-        }, 1000);
-    };
-
-
-    //TODO make this an actual animation, not just a plain set operation
-    this.animateTo = function (rotationH, rotationV) {
-        this.canon.rotateX(rotationV);
-        this.obj.rotateY(rotationH);
-        this.bbox.update();
-
-        this.checkTangent(Scene.getTerrain().objForHittest);
-    };
-
-
-    //TODO take the distance from this player to target, then cycle through provious shots, take the one with closest distance
-    // as a basis and then apply a random factor to the settings of that shot; the closer the distance in percent
-    // the less random variation should go into the next shot; i.e. the closer it is already, the more circling to the
-    // accurate position will happen
-    this.guessShot = function (rotationHLimits, rotationVLimits, forceLimits) {
-
-        var rotationH = Math.random() * Math.PI;
-        var rotationV = Math.random() * Math.PI / 2 - Math.PI / 4;
-        var force = Math.random() * 0.5 + 0.5;
-
-        return {
-            rotationH: rotationH,
-            rotationV: rotationV,
-            force: force
-        };
-    };
-
-};
-
-AIPlayer.prototype = new Player();
-AIPlayer.constructor = AIPlayer;
 var Projectile = function (options) {
+
+    // some generic defaults that get overwritten by the passed in options
+    var defaults = {
+        mass: 0.1,
+        direction: new THREE.Vector3(0, 0, 0),
+        player: null
+    };
+
+    var options = $.extend(defaults, options);
 
     var geometry = new THREE.SphereGeometry(0.25, 4, 4);
     var material = new THREE.MeshBasicMaterial({ color: 0xff00ff });
@@ -560,37 +602,17 @@ var Projectile = function (options) {
     var raycasterDirection = new THREE.Vector3(0, -1, 0);
     var raycaster = new THREE.Raycaster(this.position, raycasterDirection);
 
-    //this.mass = 0.1;
-    //
-    //this.direction = new THREE.Vector3(0, 0, 0);
-    //this.position = new THREE.Vector3(0, 0, 0);
     //TODO implement drag factor into update
     this.drag = 0.01;
 
     this.obj = new THREE.Object3D();
-
     this.obj.add(mesh);
     this.obj.position = new THREE.Vector3(0, 0, 0);
-
-    this.playerOrigin = null;
-    var hasExitedPlayerOrigin = false;
-
-
-    var defaults = {
-        mass: 0.1,
-        direction: new THREE.Vector3(0, 0, 0),
-        player: null
-    };
-
-    var options = $.extend(defaults, options);
 
     this.position = options.player.position.clone();
 
     // TODO this is a dirty hack to not get the player hit its immediate surroundings nor its own bounding box
     this.position.y += offsetY;
-
-    console.log("Projectile()", options);
-
 
 
     /**
@@ -633,21 +655,10 @@ var Projectile = function (options) {
         // if the ray hit something the projectile is still above the surface, no hit, but store the lastResult
         var test = raycaster.intersectObject(plane);
 
-        console.log("check", test, lastResult);
-
         if (test.length) {
             lastResult = test;
-
-            if (lastResult[0].point.x == NaN) {
-                console.log("--overwriting NaN point");
-                lastResult[0].point = this.position;
-            }
             return false;
         } else {
-            console.log("checkPlaneCollision no intersect", lastResult);
-            if (!lastResult) {
-                lastResult = [{ point: this.position }];
-            }
             return true;
         }
     };
@@ -656,14 +667,19 @@ var Projectile = function (options) {
     /**
      * Helper to access the last triggered plane collision result array (with intersect objects)
      *
-     * @returns {*}
+     * @returns {boolean|THREE.Vector3}
      */
     this.getPlaneCollision = function () {
         console.log("Projectile.getPlaneCollision", lastResult);
-        return lastResult ? lastResult : false;
+        return lastResult ? lastResult[0].point : false;
     };
 
 
+    /**
+     *
+     * @param player Player
+     * @returns {boolean|THREE.Vector3}
+     */
     this.checkPlayerCollision = function (player) {
         // for now, detect intersection of the player object's bounding sphere
 
@@ -761,35 +777,44 @@ var Scene = (function () {
         var players = Game.getPlayers();
 
         if (projectiles && projectiles.length) {
-            //TODO projectile terrain / player hit detection
             for (var p in projectiles) {
                 projectiles[p].applyForce(gravity);
                 projectiles[p].update();
 
-
-                console.log("Players", players);
                 for (var player in players) {
-                    var hit = projectiles[p].checkPlayerCollision(players[player]);
-                    if (hit != false) {
+                    var playerHit = projectiles[p].checkPlayerCollision(players[player]);
+                    if (playerHit != false) {
                         scene.remove(projectiles[p].obj);
                         projectiles = [];
 
                         // NOTE this just emulates the {} hit object, but does not correspond to a similar object as if
                         // returned from raycaster.intersectObject; could use the hit THREE.Vector3 and cast a ray from
                         // y = 100 down to get the actual hit (on the player object)
-                        $(window).trigger("PROJECTILE_IMPACT", { hit: { point: hit } });
-                        terrain.showImpact(hit, 0xff0000);
+                        $(window).trigger("PROJECTILE_IMPACT", { point: playerHit });
+                        terrain.showImpact(playerHit, 0xff0000);
 
                         break;
                     }
                 }
 
                 if (projectiles[p] && projectiles[p].checkPlaneCollision(terrain.objForHittest)) {
-                    terrain.showImpact(projectiles[p].getPlaneCollision()[0].point, 0x333333);
+
+                    var planeHit = projectiles[p].getPlaneCollision();
+
+                    if (!planeHit) {
+                        // this can happen when a projectile falls "through" the terrain mesh or is shot from under it
+
+                        //TODO low priority: instead of just using the projectile position, aquire a definite terrain
+                        // hit position by taking the projectile position and casting a ray along the y axis to hit
+                        // the terrain
+                        planeHit = projectiles[p].position;
+                    }
+
+                    terrain.showImpact(planeHit, 0x333333);
 
                     // TODO BAD practise to have this event trigger on window :/
                     // maybe need to make Scene a object after all
-                    $(window).trigger("PROJECTILE_IMPACT", { hit: projectiles[p].getPlaneCollision()[0] });
+                    $(window).trigger("PROJECTILE_IMPACT", { point: planeHit });
 
                     scene.remove(projectiles[p].obj);
                     projectiles = [];
@@ -935,21 +960,23 @@ Terrain = function() {
     };
 
 
+    /**
+     * Find the next closest player from @param position (while ignoring @param excludePosition)
+     *
+     * @param position THREE.Vector3
+     * @param excludePosition THREE.Vector3
+     * @returns {{position: THREE.Vector3, distance: number}}
+     */
     this.closestOtherPlayer = function (position, excludePosition) {
-        console.log("Terrain.closestOtherPlayer", position, excludePosition, position.x);
-
-        if (isNaN(position.x)) {
-            return false;
-        }
-
-        // TODO work around this magic number
-        var closest = 99999999;
+        console.log("Terrain.closestOtherPlayer()", position, excludePosition);
+        var closest = null;
         var closestPos = null;
         for (pos in this.playerPositions) {
             if (this.playerPositions[pos] != excludePosition) {
                 var distance = position.distanceTo(this.playerPositions[pos]);
-                if (distance < closest) {
+                if (closest === null || distance < closest) {
                     closestPos = this.playerPositions[pos];
+                    closest = distance;
                 }
             }
         }
@@ -1005,8 +1032,8 @@ var UI = (function () {
 
     function startGame() {
         var players = [
-            new HumanPlayer({ color: 0x00ff00, name: "Foobar"}),
-            //new AIPlayer({ color: 0xff00ff, name: "Foobar" }),
+            //new HumanPlayer({ color: 0x00ff00, name: "Foobar"}),
+            new AIPlayer({ color: 0xff00ff, name: "Foobar" }),
             new AIPlayer({ color: 0xff6600, difficulty: 0, name: "Robert the Robot" })
         ];
 
@@ -1035,7 +1062,6 @@ var Utils = (function () {
          * TODO implement recursive search and recursive depth
          */
         Object3DgetChildByName: function(object3d, name) {
-            console.log(object3d, name);
             for (child in object3d.children) {
                 if (object3d.children[child].userData && object3d.children[child].userData.name &&
                     object3d.children[child].userData.name == name)
