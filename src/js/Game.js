@@ -45,6 +45,7 @@ var Game = (function () {
 
         if (players[currentTurn].isHuman) {
             players[currentTurn].enableControls();
+            CameraManager.enableControls();
         } else {
             // TODO plenty of AI and animation logic
             players[currentTurn].autofire();
@@ -60,6 +61,7 @@ var Game = (function () {
         if (true) {
             if (players[currentTurn].isHuman) {
                 players[currentTurn].disableControls();
+                CameraManager.disableControls();
             }
             currentTurn++;
             if (currentTurn >= players.length) {

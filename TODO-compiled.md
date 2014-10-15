@@ -4,7 +4,7 @@
 ## src/js/Game.js
 
 -  **TODO** `(line 40)`  instead of x,z -15 those should be behind the player facing the direction of other players
--  **TODO** `(line 49)`  plenty of AI and animation logic
+-  **TODO** `(line 50)`  plenty of AI and animation logic
 
 ## src/js/Player.AIPlayer.js
 
@@ -36,9 +36,9 @@
 
 ## src/js/Scene.js
 
--  **NOTE** `(line 97)`  this just emulates the {} hit object, but does not correspond to a similar object as if
--  **TODO** `(line 114)`  low priority: instead of just using the projectile position, aquire a definite terrain
--  **TODO** `(line 122)`  BAD practise to have this event trigger on window :/
+-  **NOTE** `(line 99)`  this just emulates the {} hit object, but does not correspond to a similar object as if
+-  **TODO** `(line 116)`  low priority: instead of just using the projectile position, aquire a definite terrain
+-  **TODO** `(line 124)`  BAD practise to have this event trigger on window :/
 
 ## src/js/Terrain.js
 

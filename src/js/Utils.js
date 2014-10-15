@@ -38,6 +38,20 @@ var Utils = (function () {
             );
 
             return inside;
+        },
+
+
+        HelperLine: function (vectorPoints, color, offset) {
+            var geometry = new THREE.Geometry();
+            for (i in vectorPoints) {
+                geometry.vertices.push(vectorPoints[i]);
+            }
+            if (offset) {
+                geometry.applyMatrix(new THREE.Matrix4().setPosition(offset));
+            }
+            var material = new THREE.LineBasicMaterial({ color: color ? color : 0xff0000 });
+
+            return new THREE.Line(geometry, material);
         }
     };
 }());

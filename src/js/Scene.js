@@ -19,6 +19,8 @@ var Scene = (function () {
         scene = new THREE.Scene();
 
         CameraManager.init();
+        scene.add(CameraManager.getCameraDolly());
+        scene.add(CameraManager.getRotationHelper());
 
         renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("gamecanvas") });
 			renderer.setSize(window.innerWidth, window.innerHeight);

@@ -3,84 +3,183 @@
 var CameraManager = (function () {
 
     var camera;
-    var lookAt;
+    var cameraDolly;
+
+    var rotationHelper;
+
+    var lastLookAt;
 
     var targetPosition;
     var targetLookAt;
 
+    var controlsEnabled = false;
+
 
     var init = function () {
+        cameraDolly = new THREE.Object3D();
+        cameraDolly.matrixAutoUpdate = true;
+        //cameraDolly.rotation.order = "XZY";
         camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 150);
+        // rotate camera once so that it aligns with the cameraDolly's .lookAt direction
+        camera.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI);
+        camera.translateZ(15);
+
+        var g = new THREE.SphereGeometry(1, 4, 4);
+        var m = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true });
+        cameraDolly.add(new THREE.Mesh(g, m));
+
+        cameraDolly.add(camera);
+        var geom = new THREE.BoxGeometry(10, 10, 10);
+        var mat = new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true });
+        cameraDolly.add(new THREE.Mesh(geom, mat));
+
+        setupCameraControls();
 
         $(window).on("PROJECTILE_MOVE", function (e, data) {
-            camera.lookAt(data.position);
-            lookAt = data.position;
+            cameraDolly.lookAt(data.position);
+            lastLookAt = data.position;
         });
+
+
+        rotationHelper = new THREE.Object3D();
     };
 
 
-    var animateTo = function (position, _lookAt) {
-        //console.log("CameraManager.animateTo", position, _lookAt);
+    var animateTo = function (position, lookAt) {
+        //console.log("CameraManager.animateTo", position, lookAt);
         targetPosition = position;
-        targetLookAt = _lookAt;
-        lookAt = _lookAt;
+        targetLookAt = lookAt;
+        lastLookAt = lookAt;
     };
 
 
-    var setTo = function (position, _lookAt) {
-        var diff = position.clone().sub(camera.position.clone());
-        camera.applyMatrix(new THREE.Matrix4().setPosition(diff));
-        camera.lookAt(_lookAt);
+    var setTo = function (position, lookAt) {
+        var diff = position.clone().sub(cameraDolly.position.clone());
+        cameraDolly.applyMatrix(new THREE.Matrix4().setPosition(diff));
+        cameraDolly.lookAt(lookAt);
 
-        lookAt = _lookAt;
+        lastLookAt = lookAt;
+
+        targetLookAt = lookAt;
+        targetPosition = position;
     };
 
 
     var update = function () {
-        if (camera.position && targetPosition) {
-            var diff = targetPosition.clone().sub(camera.position.clone());
+        if (cameraDolly.position && targetPosition) {
+            var diff = targetPosition.clone().sub(cameraDolly.position.clone());
             diff.multiplyScalar(0.15);
-            camera.applyMatrix(new THREE.Matrix4().setPosition(diff));
-            camera.lookAt(lookAt);
-        }
-        if (lookAt != targetLookAt) {
-            camera.lookAt(lookAt);
+            cameraDolly.applyMatrix(new THREE.Matrix4().setPosition(diff));
+            cameraDolly.lookAt(targetLookAt);
         }
     };
 
 
-    //function setupScrollInteraction () {
-    //    $(window).on('mousewheel', function(e) {
-    //        //console.log(e.originalEvent.wheelDelta);
-    //        if (e.originalEvent.wheelDelta >= 0) {
-    //            camera.position.z += 0.25;
-    //        } else {
-    //            camera.position.z -= 0.25;
-    //        }
-    //    });
-    //}
-    //
-    //
-    //function setupMouseInteraction() {
-    //    $(window).mousemove(function (e) {
-    //        var mouseX = e.originalEvent.pageX,
-    //            mouseY = e.originalEvent.pageY,
-    //            percentH = mouseX / window.innerWidth,
-    //            percentV = mouseY / window.innerHeight;
-    //
-    //        camera.position.y = 10 + (5 * percentV);
-    //        camera.position.x = percentH * 20 - 10;
-    //        camera.lookAt(new THREE.Vector3(0, 0, 0));
-    //    });
-    //}
+    var enableCameraControl = function () {
+        controlsEnabled = true;
+    };
+
+
+    var disableCameraControl = function () {
+        controlsEnabled = false;
+    };
+
+
+    function setupCameraControls() {
+        $(window).on("keydown", onKeyDown);
+    }
+
+
+    function onKeyDown(e) {
+        console.log(e.keyCode);
+
+        var rotationSpeed = 0.051;
+
+        switch (e.keyCode) {
+            // d
+            case 68:
+                rotate(new THREE.Vector3(0, 0, 1), rotationSpeed);
+                break;
+
+            // a
+            case 65:
+                rotate(new THREE.Vector3(0, 0, 1), -rotationSpeed);
+                break;
+
+            // w
+            case 87:
+                rotate(new THREE.Vector3(1, 0, 0), rotationSpeed);
+                break;
+
+            // s
+            case 83:
+                rotate(new THREE.Vector3(1, 0, 0), -rotationSpeed);
+                break;
+
+            default:
+                break;
+        }
+    }
+
+
+    function rotate(worldAxis, rotation) {
+        //console.log("camera position", cameraDolly.position, cameraDolly.rotation);
+        var before = cameraDolly.position.clone();
+
+
+        var localOriginToCamera = camera.position.clone();
+        console.log("local origin to camera", localOriginToCamera);
+
+        localOriginToCamera.y = 0;
+        var globalCameraOriginToCamera = cameraDolly.localToWorld(localOriginToCamera);
+        globalCameraOriginToCamera.y = 0;
+        console.log("y 0 global camera origin to camera vector", globalCameraOriginToCamera);
+
+        var globalCameraDollyPosition = cameraDolly.position.clone();
+        globalCameraDollyPosition.y = 0;
+        console.log("y 0 global camera dolly position", globalCameraDollyPosition);
+
+        var angleBetween = globalCameraOriginToCamera.angleTo(globalCameraDollyPosition);
+        console.log("angleBetween camera-origin and camera", angleBetween);
+
+        var translatedAxis = worldAxis;
+        translatedAxis = translatedAxis.applyMatrix4(new THREE.Matrix4().makeRotationY(angleBetween));
+        console.log("translated world rotation axis in global", translatedAxis);
+
+        rotationHelper.add(Utils.HelperLine([new THREE.Vector3(0,0,0), translatedAxis], 0x00ffff, cameraDolly.position.clone()));
+        translatedAxis = cameraDolly.worldToLocal(translatedAxis);
+
+        console.log("translated world rotation axis in local space", translatedAxis);
+
+        targetPosition = cameraDolly.position;
+        cameraDolly.position = before;
+
+        while (rotationHelper.childen > 5) {
+            rotationHelper.removeChild(rotationHelper.children[0]);
+        }
+
+        rotationHelper.add(Utils.HelperLine([new THREE.Vector3(0,0,0), translatedAxis.multiplyScalar(10)],
+            0xff00ff, cameraDolly.position));
+    }
+
+
     return {
         init: init,
         animateTo: animateTo,
         setTo: setTo,
         update: update,
 
+        enableControls: enableCameraControl,
+        disableControls: disableCameraControl,
+
         getCamera: function () {
             return camera;
+        },
+        getCameraDolly: function () {
+            return cameraDolly;
+        },
+        getRotationHelper: function () {
+            return rotationHelper;
         }
     };
 
@@ -136,6 +235,7 @@ var Game = (function () {
 
         if (players[currentTurn].isHuman) {
             players[currentTurn].enableControls();
+            CameraManager.enableControls();
         } else {
             // TODO plenty of AI and animation logic
             players[currentTurn].autofire();
@@ -151,6 +251,7 @@ var Game = (function () {
         if (true) {
             if (players[currentTurn].isHuman) {
                 players[currentTurn].disableControls();
+                CameraManager.disableControls();
             }
             currentTurn++;
             if (currentTurn >= players.length) {
@@ -712,6 +813,8 @@ var Scene = (function () {
         scene = new THREE.Scene();
 
         CameraManager.init();
+        scene.add(CameraManager.getCameraDolly());
+        scene.add(CameraManager.getRotationHelper());
 
         renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("gamecanvas") });
 			renderer.setSize(window.innerWidth, window.innerHeight);
@@ -894,7 +997,7 @@ Terrain = function() {
 
         shaded = new THREE.Mesh(geometry, material);
         shaded.userData = { name: "shaded" };
-        wire = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true, wireframeLinewidth: 0.5 }));
+        wire = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x333333, wireframe: true, wireframeLinewidth: 0.5 }));
         wire.userData.name = "wire";
         effects = new THREE.Object3D();
         effects.userData.name = "effects";
@@ -1032,9 +1135,10 @@ var UI = (function () {
 
     function startGame() {
         var players = [
-            //new HumanPlayer({ color: 0x00ff00, name: "Foobar"}),
-            new AIPlayer({ color: 0xff00ff, name: "Foobar" }),
-            new AIPlayer({ color: 0xff6600, difficulty: 0, name: "Robert the Robot" })
+            new HumanPlayer({ color: 0x00ff00, name: "Foobar" }),
+            new HumanPlayer({ color: 0xff0000, name: "Barfoo" })
+            //new AIPlayer({ color: 0xff00ff, name: "Foobar" }),
+            //new AIPlayer({ color: 0xff6600, difficulty: 0, name: "Robert the Robot" })
         ];
 
         Game.start(players);
@@ -1084,6 +1188,20 @@ var Utils = (function () {
             );
 
             return inside;
+        },
+
+
+        HelperLine: function (vectorPoints, color, offset) {
+            var geometry = new THREE.Geometry();
+            for (i in vectorPoints) {
+                geometry.vertices.push(vectorPoints[i]);
+            }
+            if (offset) {
+                geometry.applyMatrix(new THREE.Matrix4().setPosition(offset));
+            }
+            var material = new THREE.LineBasicMaterial({ color: color ? color : 0xff0000 });
+
+            return new THREE.Line(geometry, material);
         }
     };
 }());

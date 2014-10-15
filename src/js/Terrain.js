@@ -57,7 +57,7 @@ Terrain = function() {
 
         shaded = new THREE.Mesh(geometry, material);
         shaded.userData = { name: "shaded" };
-        wire = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true, wireframeLinewidth: 0.5 }));
+        wire = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x333333, wireframe: true, wireframeLinewidth: 0.5 }));
         wire.userData.name = "wire";
         effects = new THREE.Object3D();
         effects.userData.name = "effects";
