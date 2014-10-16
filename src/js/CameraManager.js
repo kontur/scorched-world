@@ -24,15 +24,15 @@ var CameraManager = (function () {
         // rotate camera once so that it aligns with the cameraDolly's .lookAt direction
         camera.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI);
         camera.translateZ(15);
-
-        var g = new THREE.SphereGeometry(1, 4, 4);
-        var m = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true });
-        cameraDolly.add(new THREE.Mesh(g, m));
-
         cameraDolly.add(camera);
-        var geom = new THREE.BoxGeometry(10, 10, 10);
-        var mat = new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true });
-        cameraDolly.add(new THREE.Mesh(geom, mat));
+        cameraDolly.add(new THREE.AxisHelper(25));
+
+        //var g = new THREE.SphereGeometry(1, 4, 4);
+        //var m = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true });
+        //cameraDolly.add(new THREE.Mesh(g, m));
+        //var geom = new THREE.BoxGeometry(10, 10, 10);
+        //var mat = new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true });
+        //cameraDolly.add(new THREE.Mesh(geom, mat));
 
         setupCameraControls();
 
@@ -99,22 +99,22 @@ var CameraManager = (function () {
         switch (e.keyCode) {
             // d
             case 68:
-                rotate(new THREE.Vector3(0, 0, 1), rotationSpeed);
+                rotate("x", rotationSpeed);
                 break;
 
             // a
             case 65:
-                rotate(new THREE.Vector3(0, 0, 1), -rotationSpeed);
+                rotate("x", -rotationSpeed);
                 break;
 
             // w
             case 87:
-                rotate(new THREE.Vector3(1, 0, 0), rotationSpeed);
+                rotate("y", rotationSpeed);
                 break;
 
             // s
             case 83:
-                rotate(new THREE.Vector3(1, 0, 0), -rotationSpeed);
+                rotate("y", -rotationSpeed);
                 break;
 
             default:
@@ -123,44 +123,24 @@ var CameraManager = (function () {
     }
 
 
-    function rotate(worldAxis, rotation) {
-        //console.log("camera position", cameraDolly.position, cameraDolly.rotation);
+    /**
+     * TODO this implementation is just broken. period.
+     * TODO initial idea was to translate world Y axis to cameraDolly vector, and use THREE.Matrix4().makeRotationAxis
+     *
+     * @param axis
+     * @param rotation
+     */
+    function rotate(axis, rotation) {
         var before = cameraDolly.position.clone();
 
-
-        var localOriginToCamera = camera.position.clone();
-        console.log("local origin to camera", localOriginToCamera);
-
-        localOriginToCamera.y = 0;
-        var globalCameraOriginToCamera = cameraDolly.localToWorld(localOriginToCamera);
-        globalCameraOriginToCamera.y = 0;
-        console.log("y 0 global camera origin to camera vector", globalCameraOriginToCamera);
-
-        var globalCameraDollyPosition = cameraDolly.position.clone();
-        globalCameraDollyPosition.y = 0;
-        console.log("y 0 global camera dolly position", globalCameraDollyPosition);
-
-        var angleBetween = globalCameraOriginToCamera.angleTo(globalCameraDollyPosition);
-        console.log("angleBetween camera-origin and camera", angleBetween);
-
-        var translatedAxis = worldAxis;
-        translatedAxis = translatedAxis.applyMatrix4(new THREE.Matrix4().makeRotationY(angleBetween));
-        console.log("translated world rotation axis in global", translatedAxis);
-
-        rotationHelper.add(Utils.HelperLine([new THREE.Vector3(0,0,0), translatedAxis], 0x00ffff, cameraDolly.position.clone()));
-        translatedAxis = cameraDolly.worldToLocal(translatedAxis);
-
-        console.log("translated world rotation axis in local space", translatedAxis);
+        if (axis == "x") {
+            cameraDolly.applyMatrix(new THREE.Matrix4().makeRotationX(rotation));
+        } else if (axis == "y") {
+            cameraDolly.applyMatrix(new THREE.Matrix4().makeRotationY(rotation));
+        }
 
         targetPosition = cameraDolly.position;
         cameraDolly.position = before;
-
-        while (rotationHelper.childen > 5) {
-            rotationHelper.removeChild(rotationHelper.children[0]);
-        }
-
-        rotationHelper.add(Utils.HelperLine([new THREE.Vector3(0,0,0), translatedAxis.multiplyScalar(10)],
-            0xff00ff, cameraDolly.position));
     }
 
 

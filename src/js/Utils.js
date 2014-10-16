@@ -41,6 +41,15 @@ var Utils = (function () {
         },
 
 
+        /**
+         * NOTE There is the similar THREE.ArrowHelper(dir, origin, length, hex, headLength, headWidth)
+         *
+         * @param vectorPoints
+         * @param color
+         * @param offset
+         * @returns {THREE.Line}
+         * @constructor
+         */
         HelperLine: function (vectorPoints, color, offset) {
             var geometry = new THREE.Geometry();
             for (i in vectorPoints) {

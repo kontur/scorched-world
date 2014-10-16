@@ -41,6 +41,8 @@ var Scene = (function () {
 
         gravity = new Force(new THREE.Vector3(0, -0.055, 0));
 
+        scene.add(new THREE.AxisHelper(100));
+
         projectiles = [];
 
     };

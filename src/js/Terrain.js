@@ -43,6 +43,7 @@ Terrain = function() {
             var x = geometry.vertices[v].x;
             var y = geometry.vertices[v].y;
 
+            // TODO make these parameteres and frequencies more random still
             // layer different frequency noise link suggested here: http://stackoverflow.com/a/12627930/999162
             geometry.vertices[v].z += noise.perlin2(x, y) + noise.perlin2(x / 2, y / 2) + 4 * noise.perlin2(x / 8, y / 8) +
                 16 * noise.perlin2(x / 32, y / 32);
@@ -63,7 +64,7 @@ Terrain = function() {
         effects.userData.name = "effects";
 
         this.obj.add(shaded);
-        this.obj.add(wire);
+        //this.obj.add(wire);
         this.obj.add(effects);
 
         // provide public reference to an object to be used for hittests

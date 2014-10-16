@@ -1,6 +1,11 @@
 # Grunt TODO
 
 
+## src/js/CameraManager.js
+
+-  **TODO** `(line 127)`  this implementation is just broken. period.
+-  **TODO** `(line 128)`  initial idea was to translate world Y axis to cameraDolly vector, and use THREE.Matrix4().makeRotationAxis
+
 ## src/js/Game.js
 
 -  **TODO** `(line 40)`  instead of x,z -15 those should be behind the player facing the direction of other players
@@ -36,13 +41,14 @@
 
 ## src/js/Scene.js
 
--  **NOTE** `(line 99)`  this just emulates the {} hit object, but does not correspond to a similar object as if
--  **TODO** `(line 116)`  low priority: instead of just using the projectile position, aquire a definite terrain
--  **TODO** `(line 124)`  BAD practise to have this event trigger on window :/
+-  **NOTE** `(line 101)`  this just emulates the {} hit object, but does not correspond to a similar object as if
+-  **TODO** `(line 118)`  low priority: instead of just using the projectile position, aquire a definite terrain
+-  **TODO** `(line 126)`  BAD practise to have this event trigger on window :/
 
 ## src/js/Terrain.js
 
--  **TODO** `(line 109)`  and b) make sure there is minimumDistance (percent of main area) between the players
+-  **TODO** `(line 46)`  make these parameteres and frequencies more random still
+-  **TODO** `(line 110)`  and b) make sure there is minimumDistance (percent of main area) between the players
 
 ## src/js/UI.js
 
@@ -51,3 +57,4 @@
 ## src/js/Utils.js
 
 -  **TODO** `(line 16)`  implement recursive search and recursive depth
+-  **NOTE** `(line 45)`  There is the similar THREE.ArrowHelper(dir, origin, length, hex, headLength, headWidth)
