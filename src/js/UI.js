@@ -3,12 +3,18 @@
  */
 var UI = (function () {
 
+    var playerColors = [0x00ff00, 0xff0000, 0xffff00, 0x00ffff];
+    var playerRowTemplate = Handlebars.compile($("#playerRowTemplate").html());
+    var $playersTable = $("#start table");
+
     var init = function () {
         $(window).on("resize", onResize);
         onResize();
-        $("#ui-reset-scene").on("click", resetScene);
         $("#ui-start-game").on("click", startGame);
+        $("#menus [name=numPlayers]").on("change", startUpdatePlayers);
+        showMenu("#start");
     };
+
 
     //TODO this resizing doesn't really work yet as intended; it stretches the scene
     function onResize() {
@@ -20,20 +26,65 @@ var UI = (function () {
     }
 
 
-    function resetScene() {
-        Game.reset();
-    }
+    //function resetScene() {
+    //    Game.reset();
+    //}
 
     function startGame() {
-        var players = [
-            new HumanPlayer({ color: 0x00ff00, name: "Foobar" }),
-            new HumanPlayer({ color: 0xff0000, name: "Barfoo" })
-            //new AIPlayer({ color: 0xff00ff, name: "Foobar" }),
-            //new AIPlayer({ color: 0xff6600, difficulty: 0, name: "Robert the Robot" })
-        ];
+        var players = [];
 
+        $playersTable.children(".playerRow").each(function () {
+            var $this = $(this),
+                playerName = $this.find("input[name=playerName]").val();
+
+            if (!playerName) {
+                playerName = "Mr. Random";
+            }
+
+            if ($this.find("select").val() == "human") {
+                players.push(new HumanPlayer({ color: playerColors[players.length], name: playerName }));
+            } else {
+                players.push(new AIPlayer({ color: playerColors[players.length], name: playerName }));
+            }
+        });
+
+        //new HumanPlayer({ color: 0x00ff00, name: "Foobar" }),
+        //new HumanPlayer({ color: 0xff0000, name: "Barfoo" })
+        //new AIPlayer({ color: 0xff00ff, name: "Foobar" }),
+        //new AIPlayer({ color: 0xff6600, difficulty: 0, name: "Robert the Robot" })
+
+        console.log(players);
+
+        hideMenu();
         Game.start(players);
     }
+
+
+    function startUpdatePlayers(e) {
+        console.log($(e.target).val());
+
+        var numPlayers = $(e.target).val();
+
+        while ($playersTable.children(".playerRow").length < numPlayers) {
+            var numRows = $playersTable.children(".playerRow").length;
+            $playersTable.append(playerRowTemplate({ num: numRows + 1 }));
+        }
+
+        while ($playersTable.children(".playerRow").length > numPlayers) {
+            $playersTable.children(".playerRow:last").remove();
+        }
+    }
+
+
+    function showMenu(menuId) {
+        hideMenu();
+        $(menuId).show();
+    }
+
+    function hideMenu() {
+        $("#menus").children().hide();
+    }
+
 
     return {
         init: init,

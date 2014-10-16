@@ -1,19 +1,15 @@
 #3D mortar game
 
 ##Top level to-do's
-* generate terrain
 * basic UI for player controls
-* physics for shooting projectiles
 * camera controls (set camera behind player with mouse interaction for mouse angle tilt)
 * basic opponent AI
-* target hit logic
 
 ###Improvement from crude initial implementations
 * player position centerish on the map and not too close to each other
 * player controls for firing projectiles
 * player / AI visual distinction
 * AI mustn't shoot into immediate surrounding terrain walls (kill itself) > base random rotation on average face normal
-* better noise based terrain generation
 * refactor event system and avoid having events on $(window)
 
 ####Low priority cool to have

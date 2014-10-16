@@ -19,6 +19,17 @@ body {
   position: absolute;
   z-index: 10;
 }
+#ui #menus {
+  display: block;
+  height: 15em;
+  padding: 2em;
+  margin: 5em auto;
+  width: 20em;
+}
+#ui #menus > div {
+  background: rgba(255, 255, 255, 0.85);
+  display: none;
+}
 button:hover {
   background: white;
 }
@@ -37,6 +48,17 @@ body {
   height: 100%;
   position: absolute;
   z-index: 10;
+}
+#ui #menus {
+  display: block;
+  height: 15em;
+  padding: 2em;
+  margin: 5em auto;
+  width: 20em;
+}
+#ui #menus > div {
+  background: rgba(255, 255, 255, 0.85);
+  display: none;
 }
 button:hover {
   background: white;

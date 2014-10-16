@@ -28,9 +28,10 @@
 
 ## src/js/Player.js
 
--  **TODO** `(line 24)`  adjust fireForceFactor to ensure the other player is always hitable
--  **TODO** `(line 82)`  prevent multiple simultaneous projectiles in the air
--  **TODO** `(line 83)`  projectile mass has no effect
+-  **TODO** `(line 23)`  adjust fireForceFactor to ensure the other player is always hitable
+-  **TODO** `(line 83)`  prevent multiple simultaneous projectiles in the air
+-  **TODO** `(line 84)`  projectile mass has no effect
+-  **TODO** `(line 217)`  visually signify player having lost
 
 ## src/js/Projectile.js
 
@@ -41,9 +42,9 @@
 
 ## src/js/Scene.js
 
--  **NOTE** `(line 101)`  this just emulates the {} hit object, but does not correspond to a similar object as if
--  **TODO** `(line 118)`  low priority: instead of just using the projectile position, aquire a definite terrain
--  **TODO** `(line 126)`  BAD practise to have this event trigger on window :/
+-  **NOTE** `(line 98)`  this just emulates the {} hit object, but does not correspond to a similar object as if
+-  **TODO** `(line 116)`  low priority: instead of just using the projectile position, aquire a definite terrain
+-  **TODO** `(line 124)`  BAD practise to have this event trigger on window :/
 
 ## src/js/Terrain.js
 
@@ -52,7 +53,7 @@
 
 ## src/js/UI.js
 
--  **TODO** `(line 13)`  this resizing doesn't really work yet as intended; it stretches the scene
+-  **TODO** `(line 19)`  this resizing doesn't really work yet as intended; it stretches the scene
 
 ## src/js/Utils.js
 

@@ -185,7 +185,7 @@ var Game = (function () {
     var start = function (_players) {
         players = _players;
 
-        Scene.init();
+        Scene.init(_players.length);
         Scene.start();
 
         for (p in players) {
@@ -227,8 +227,10 @@ var Game = (function () {
         console.log("Game.updateDamage()");
         $(window).off("PROJECTILE_IMPACT", updateDamage);
 
+        var alive = playersAlive();
+
         // if no winner
-        if (true) {
+        if (alive.length > 1) {
             if (players[currentTurn].isHuman) {
                 players[currentTurn].disableControls();
                 CameraManager.disableControls();
@@ -239,7 +241,20 @@ var Game = (function () {
             }
 
             setTimeout(nextTurn, 1500);
+        } else {
+            console.log("WIN FOR PLAYER ", alive[0]);
         }
+    }
+
+
+    function playersAlive() {
+        var alivePlayers = [];
+        for (var p in players) {
+            if (players[p].life > 0) {
+                alivePlayers.push(players[p]);
+            }
+        }
+        return alivePlayers;
     }
 
 
@@ -475,7 +490,6 @@ function Player(options) {
 
     this.options = applyOptions(options);
     function applyOptions(options) {
-        //console.log("applyOptions", options);
         return $.extend(defaults, options);
     }
 
@@ -489,6 +503,8 @@ function Player(options) {
     this.fireForceFactor = 2;
     this.fireForce = 0;
     this.fireButtonTimeout = null;
+
+    this.life = 100;
 
 
     this.init = function () {
@@ -652,9 +668,35 @@ function Player(options) {
     };
 
 
+    /**
+     * helper for checking if the aim hits terrain in immediate surroundings (i.e. projectile will explode next to the
+     * player because it hits terrain)
+     *
+     * @param object
+     */
     this.checkTangent = function (object) {
-        var raycaster = new THREE.Raycaster(this.position, this.getIndicator().multiplyScalar(10));
-        console.log("Player.checkTangent", raycaster.intersectObject(object));
+        //var raycaster = new THREE.Raycaster(this.position, this.getIndicator().multiplyScalar(10));
+        //console.log("Player.checkTangent", raycaster.intersectObject(object));
+    };
+
+
+    /**
+     * this player got hit
+     */
+    this.registerHit = function () {
+        this.life -= 100;
+
+        if (this.life <= 0) {
+            this.terminate();
+        }
+    };
+
+
+    /**
+     * TODO visually signify player having lost
+     */
+    this.terminate = function () {
+        console.log("Player exploded");
     };
 }
 
@@ -787,7 +829,7 @@ var Scene = (function () {
     /**
      * entry point for setting up the scene and renderer
      */
-    var init = function () {
+    var init = function (numPlayers) {
         console.log("Scene.init()");
 
         scene = new THREE.Scene();
@@ -808,10 +850,7 @@ var Scene = (function () {
         terrain = new Terrain();
         terrain.init();
         scene.add(terrain.obj);
-        terrain.generatePlayerPositions(2, scene);
-
-        //camera.position.z = 60;
-        //camera.position.y = 15;
+        terrain.generatePlayerPositions(numPlayers, scene);
 
         gravity = new Force(new THREE.Vector3(0, -0.055, 0));
 
@@ -876,6 +915,7 @@ var Scene = (function () {
                         // returned from raycaster.intersectObject; could use the hit THREE.Vector3 and cast a ray from
                         // y = 100 down to get the actual hit (on the player object)
                         $(window).trigger("PROJECTILE_IMPACT", { point: playerHit });
+                        players[player].registerHit();
                         terrain.showImpact(playerHit, 0xff0000);
 
                         break;
@@ -1095,12 +1135,18 @@ Terrain = function() {
 
 var UI = (function () {
 
+    var playerColors = [0x00ff00, 0xff0000, 0xffff00, 0x00ffff];
+    var playerRowTemplate = Handlebars.compile($("#playerRowTemplate").html());
+    var $playersTable = $("#start table");
+
     var init = function () {
         $(window).on("resize", onResize);
         onResize();
-        $("#ui-reset-scene").on("click", resetScene);
         $("#ui-start-game").on("click", startGame);
+        $("#menus [name=numPlayers]").on("change", startUpdatePlayers);
+        showMenu("#start");
     };
+
 
     //TODO this resizing doesn't really work yet as intended; it stretches the scene
     function onResize() {
@@ -1112,20 +1158,65 @@ var UI = (function () {
     }
 
 
-    function resetScene() {
-        Game.reset();
-    }
+    //function resetScene() {
+    //    Game.reset();
+    //}
 
     function startGame() {
-        var players = [
-            new HumanPlayer({ color: 0x00ff00, name: "Foobar" }),
-            new HumanPlayer({ color: 0xff0000, name: "Barfoo" })
-            //new AIPlayer({ color: 0xff00ff, name: "Foobar" }),
-            //new AIPlayer({ color: 0xff6600, difficulty: 0, name: "Robert the Robot" })
-        ];
+        var players = [];
 
+        $playersTable.children(".playerRow").each(function () {
+            var $this = $(this),
+                playerName = $this.find("input[name=playerName]").val();
+
+            if (!playerName) {
+                playerName = "Mr. Random";
+            }
+
+            if ($this.find("select").val() == "human") {
+                players.push(new HumanPlayer({ color: playerColors[players.length], name: playerName }));
+            } else {
+                players.push(new AIPlayer({ color: playerColors[players.length], name: playerName }));
+            }
+        });
+
+        //new HumanPlayer({ color: 0x00ff00, name: "Foobar" }),
+        //new HumanPlayer({ color: 0xff0000, name: "Barfoo" })
+        //new AIPlayer({ color: 0xff00ff, name: "Foobar" }),
+        //new AIPlayer({ color: 0xff6600, difficulty: 0, name: "Robert the Robot" })
+
+        console.log(players);
+
+        hideMenu();
         Game.start(players);
     }
+
+
+    function startUpdatePlayers(e) {
+        console.log($(e.target).val());
+
+        var numPlayers = $(e.target).val();
+
+        while ($playersTable.children(".playerRow").length < numPlayers) {
+            var numRows = $playersTable.children(".playerRow").length;
+            $playersTable.append(playerRowTemplate({ num: numRows + 1 }));
+        }
+
+        while ($playersTable.children(".playerRow").length > numPlayers) {
+            $playersTable.children(".playerRow:last").remove();
+        }
+    }
+
+
+    function showMenu(menuId) {
+        hideMenu();
+        $(menuId).show();
+    }
+
+    function hideMenu() {
+        $("#menus").children().hide();
+    }
+
 
     return {
         init: init,
@@ -1201,6 +1292,6 @@ var Utils = (function () {
 $(function() {
 
     UI.init();
-    UI.startGame();
+    //UI.startGame();
 
 });

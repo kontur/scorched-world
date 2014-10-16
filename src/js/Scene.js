@@ -13,7 +13,7 @@ var Scene = (function () {
     /**
      * entry point for setting up the scene and renderer
      */
-    var init = function () {
+    var init = function (numPlayers) {
         console.log("Scene.init()");
 
         scene = new THREE.Scene();
@@ -34,10 +34,7 @@ var Scene = (function () {
         terrain = new Terrain();
         terrain.init();
         scene.add(terrain.obj);
-        terrain.generatePlayerPositions(2, scene);
-
-        //camera.position.z = 60;
-        //camera.position.y = 15;
+        terrain.generatePlayerPositions(numPlayers, scene);
 
         gravity = new Force(new THREE.Vector3(0, -0.055, 0));
 
@@ -102,6 +99,7 @@ var Scene = (function () {
                         // returned from raycaster.intersectObject; could use the hit THREE.Vector3 and cast a ray from
                         // y = 100 down to get the actual hit (on the player object)
                         $(window).trigger("PROJECTILE_IMPACT", { point: playerHit });
+                        players[player].registerHit();
                         terrain.showImpact(playerHit, 0xff0000);
 
                         break;

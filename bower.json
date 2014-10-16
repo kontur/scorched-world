@@ -16,6 +16,7 @@
   "dependencies": {
     "jquery": "~2.1.1",
     "threejs": "*",
-    "noisejs": "*"
+    "noisejs": "*",
+    "handlebars": "~2.0.0"
   }
 }

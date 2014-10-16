@@ -11,7 +11,6 @@ function Player(options) {
 
     this.options = applyOptions(options);
     function applyOptions(options) {
-        //console.log("applyOptions", options);
         return $.extend(defaults, options);
     }
 
@@ -25,6 +24,8 @@ function Player(options) {
     this.fireForceFactor = 2;
     this.fireForce = 0;
     this.fireButtonTimeout = null;
+
+    this.life = 100;
 
 
     this.init = function () {
@@ -188,9 +189,35 @@ function Player(options) {
     };
 
 
+    /**
+     * helper for checking if the aim hits terrain in immediate surroundings (i.e. projectile will explode next to the
+     * player because it hits terrain)
+     *
+     * @param object
+     */
     this.checkTangent = function (object) {
-        var raycaster = new THREE.Raycaster(this.position, this.getIndicator().multiplyScalar(10));
-        console.log("Player.checkTangent", raycaster.intersectObject(object));
+        //var raycaster = new THREE.Raycaster(this.position, this.getIndicator().multiplyScalar(10));
+        //console.log("Player.checkTangent", raycaster.intersectObject(object));
+    };
+
+
+    /**
+     * this player got hit
+     */
+    this.registerHit = function () {
+        this.life -= 100;
+
+        if (this.life <= 0) {
+            this.terminate();
+        }
+    };
+
+
+    /**
+     * TODO visually signify player having lost
+     */
+    this.terminate = function () {
+        console.log("Player exploded");
     };
 }
 

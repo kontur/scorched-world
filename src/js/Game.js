@@ -15,7 +15,7 @@ var Game = (function () {
     var start = function (_players) {
         players = _players;
 
-        Scene.init();
+        Scene.init(_players.length);
         Scene.start();
 
         for (p in players) {
@@ -57,8 +57,10 @@ var Game = (function () {
         console.log("Game.updateDamage()");
         $(window).off("PROJECTILE_IMPACT", updateDamage);
 
+        var alive = playersAlive();
+
         // if no winner
-        if (true) {
+        if (alive.length > 1) {
             if (players[currentTurn].isHuman) {
                 players[currentTurn].disableControls();
                 CameraManager.disableControls();
@@ -69,7 +71,20 @@ var Game = (function () {
             }
 
             setTimeout(nextTurn, 1500);
+        } else {
+            console.log("WIN FOR PLAYER ", alive[0]);
         }
+    }
+
+
+    function playersAlive() {
+        var alivePlayers = [];
+        for (var p in players) {
+            if (players[p].life > 0) {
+                alivePlayers.push(players[p]);
+            }
+        }
+        return alivePlayers;
     }
 
 
