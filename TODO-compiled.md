@@ -3,13 +3,17 @@
 
 ## src/js/CameraManager.js
 
--  **TODO** `(line 143)`  this implementation is just broken. period.
--  **TODO** `(line 144)`  initial idea was to translate world Y axis to cameraDolly vector, and use THREE.Matrix4().makeRotationAxis
+-  **TODO** `(line 4)`  logic for not allowing the camera to penetrate the terrain, i.e. calculate the actual distance between
+-  **TODO** `(line 122)`  difference should be "shortest" angle, not numerical
+-  **TODO** `(line 130)`  replace 0.1 with dynamic accelarerated / eased value
+-  **TODO** `(line 186)`  this implementation is just broken. period.
+-  **TODO** `(line 187)`  initial idea was to translate world Y axis to cameraDolly vector, and use THREE.Matrix4().makeRotationAxis
 
 ## src/js/Game.js
 
--  **TODO** `(line 40)`  instead of x,z -15 those should be behind the player facing the direction of other players
--  **TODO** `(line 50)`  plenty of AI and animation logic
+-  **TODO** `(line 40)`  instead of x,z -15 those should be behind the player FACING THE DIRECTION of other players (or previous
+-  **TODO** `(line 46)`  eventually store each player's own last camera rotation and set it here when their turn starts
+-  **TODO** `(line 53)`  plenty of AI and animation logic
 
 ## src/js/Player.AIPlayer.js
 

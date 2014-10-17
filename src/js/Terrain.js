@@ -63,8 +63,8 @@ Terrain = function() {
         effects = new THREE.Object3D();
         effects.userData.name = "effects";
 
-        //this.obj.add(shaded);
-        this.obj.add(wire);
+        this.obj.add(shaded);
+        //this.obj.add(wire);
         this.obj.add(effects);
 
         // provide public reference to an object to be used for hittests

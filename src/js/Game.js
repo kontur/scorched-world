@@ -37,11 +37,14 @@ var Game = (function () {
         $(window).on("PROJECTILE_IMPACT", updateDamage);
         var pos = players[currentTurn].position.clone();
 
-        //TODO instead of x,z -15 those should be behind the player facing the direction of other players
-        pos.x -= 15;
-        pos.z -= 15;
-        pos.y = 25;
-        CameraManager.animateTo(pos, players[currentTurn].position);
+        // TODO instead of x,z -15 those should be behind the player FACING THE DIRECTION of other players (or previous
+        // set player camera position
+        //pos.x -= 15;
+        //pos.z -= 15;
+        pos.y = 35;
+
+        // TODO eventually store each player's own last camera rotation and set it here when their turn starts
+        CameraManager.animateTo(pos, players[currentTurn].position, 0);
 
         if (players[currentTurn].isHuman) {
             players[currentTurn].enableControls();
