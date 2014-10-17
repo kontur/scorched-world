@@ -48,7 +48,14 @@ var UI = (function () {
             }
         });
 
-        //new HumanPlayer({ color: 0x00ff00, name: "Foobar" }),
+
+        // lazy dev mode
+        while (players.length < 2) {
+            players.push(new HumanPlayer({ color: playerColors[players.length], name: "Foobar" }));
+            hideMenu();
+        }
+
+
         //new HumanPlayer({ color: 0xff0000, name: "Barfoo" })
         //new AIPlayer({ color: 0xff00ff, name: "Foobar" }),
         //new AIPlayer({ color: 0xff6600, difficulty: 0, name: "Robert the Robot" })

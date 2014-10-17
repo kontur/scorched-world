@@ -3,8 +3,8 @@
 
 ## src/js/CameraManager.js
 
--  **TODO** `(line 127)`  this implementation is just broken. period.
--  **TODO** `(line 128)`  initial idea was to translate world Y axis to cameraDolly vector, and use THREE.Matrix4().makeRotationAxis
+-  **TODO** `(line 143)`  this implementation is just broken. period.
+-  **TODO** `(line 144)`  initial idea was to translate world Y axis to cameraDolly vector, and use THREE.Matrix4().makeRotationAxis
 
 ## src/js/Game.js
 

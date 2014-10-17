@@ -1,9 +1,11 @@
-/*!  - v - 2014-10-16
+/*!  - v - 2014-10-17
 * Copyright (c) 2014 Johannes Neumeier; Licensed  */
 var CameraManager = (function () {
 
     var camera;
     var cameraDolly;
+    var cameraDollyVertical;
+    var cameraDollyHorizontal;
 
     var rotationHelper;
 
@@ -14,16 +16,25 @@ var CameraManager = (function () {
 
     var controlsEnabled = false;
 
+    var a;
+
 
     var init = function () {
         cameraDolly = new THREE.Object3D();
-        cameraDolly.matrixAutoUpdate = true;
-        //cameraDolly.rotation.order = "XZY";
+        cameraDollyVertical = new THREE.Object3D();
+        cameraDollyHorizontal = new THREE.Object3D();
+
         camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 150);
         // rotate camera once so that it aligns with the cameraDolly's .lookAt direction
         camera.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI);
-        camera.translateZ(15);
-        cameraDolly.add(camera);
+
+        cameraDollyVertical.translateZ(-55);
+        cameraDollyVertical.add(camera);
+        cameraDollyVertical.add(new THREE.AxisHelper(15));
+
+        cameraDollyHorizontal.add(cameraDollyVertical);
+
+        cameraDolly.add(cameraDollyHorizontal);
         cameraDolly.add(new THREE.AxisHelper(25));
 
         //var g = new THREE.SphereGeometry(1, 4, 4);
@@ -56,7 +67,7 @@ var CameraManager = (function () {
     var setTo = function (position, lookAt) {
         var diff = position.clone().sub(cameraDolly.position.clone());
         cameraDolly.applyMatrix(new THREE.Matrix4().setPosition(diff));
-        cameraDolly.lookAt(lookAt);
+        cameraDollyHorizontal.lookAt(lookAt);
 
         lastLookAt = lookAt;
 
@@ -66,11 +77,16 @@ var CameraManager = (function () {
 
 
     var update = function () {
+        //return;
         if (cameraDolly.position && targetPosition) {
             var diff = targetPosition.clone().sub(cameraDolly.position.clone());
+
+            // move in 15% steps to the target
             diff.multiplyScalar(0.15);
+
             cameraDolly.applyMatrix(new THREE.Matrix4().setPosition(diff));
-            cameraDolly.lookAt(targetLookAt);
+            cameraDolly.updateMatrix();
+            //cameraDollyHorizontal.lookAt(targetLookAt);
         }
     };
 
@@ -98,22 +114,22 @@ var CameraManager = (function () {
         switch (e.keyCode) {
             // d
             case 68:
-                rotate("x", rotationSpeed);
+                rotate("x", -rotationSpeed);
                 break;
 
             // a
             case 65:
-                rotate("x", -rotationSpeed);
+                rotate("x", rotationSpeed);
                 break;
 
             // w
             case 87:
-                rotate("y", rotationSpeed);
+                rotate("y", -rotationSpeed);
                 break;
 
             // s
             case 83:
-                rotate("y", -rotationSpeed);
+                rotate("y", rotationSpeed);
                 break;
 
             default:
@@ -130,16 +146,15 @@ var CameraManager = (function () {
      * @param rotation
      */
     function rotate(axis, rotation) {
-        var before = cameraDolly.position.clone();
-
         if (axis == "x") {
-            cameraDolly.applyMatrix(new THREE.Matrix4().makeRotationX(rotation));
+            cameraDolly.rotation.y += rotation;
+            //console.log(cameraDolly.rotation);
+            cameraDolly.updateMatrix();
         } else if (axis == "y") {
-            cameraDolly.applyMatrix(new THREE.Matrix4().makeRotationY(rotation));
+            // rotate the camera axis along local x-axis (up/down)
+            cameraDollyVertical.rotation.x += rotation;
+            cameraDollyVertical.updateMatrix();
         }
-
-        targetPosition = cameraDolly.position;
-        cameraDolly.position = before;
     }
 
 
@@ -1025,8 +1040,8 @@ Terrain = function() {
         effects = new THREE.Object3D();
         effects.userData.name = "effects";
 
-        this.obj.add(shaded);
-        //this.obj.add(wire);
+        //this.obj.add(shaded);
+        this.obj.add(wire);
         this.obj.add(effects);
 
         // provide public reference to an object to be used for hittests
@@ -1180,7 +1195,14 @@ var UI = (function () {
             }
         });
 
-        //new HumanPlayer({ color: 0x00ff00, name: "Foobar" }),
+
+        // lazy dev mode
+        while (players.length < 2) {
+            players.push(new HumanPlayer({ color: playerColors[players.length], name: "Foobar" }));
+            hideMenu();
+        }
+
+
         //new HumanPlayer({ color: 0xff0000, name: "Barfoo" })
         //new AIPlayer({ color: 0xff00ff, name: "Foobar" }),
         //new AIPlayer({ color: 0xff6600, difficulty: 0, name: "Robert the Robot" })
@@ -1292,6 +1314,6 @@ var Utils = (function () {
 $(function() {
 
     UI.init();
-    //UI.startGame();
+    UI.startGame();
 
 });

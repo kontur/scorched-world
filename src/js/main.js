@@ -2,6 +2,6 @@
 $(function() {
 
     UI.init();
-    //UI.startGame();
+    UI.startGame();
 
 });
