@@ -1,4 +1,4 @@
-/*!  - v - 2014-10-17
+/*!  - v - 2014-10-18
 * Copyright (c) 2014 Johannes Neumeier; Licensed  */
 var CameraManager = (function () {
 
@@ -9,7 +9,7 @@ var CameraManager = (function () {
 
     var targetPosition = null;
     var targetLookAt;
-    var targetRotationH = 0;
+    var targetRotationH = null;
 
     var controlsEnabled = false;
 
@@ -49,6 +49,8 @@ var CameraManager = (function () {
 
         setupCameraControls();
 
+
+        // listen for events informing of a projectile mid-air so the camera can follow it in its flight path
         $(window).on("PROJECTILE_MOVE", function (e, data) {
             targetLookAt = data.position;
             targetRotationH = 0;
@@ -64,10 +66,7 @@ var CameraManager = (function () {
         //console.log("CameraManager.animateTo", position, lookAt);
         targetPosition = position;
         targetLookAt = lookAt;
-
-        if (_targetRotationH !== null) {
-            targetRotationH = _targetRotationH;
-        }
+        targetRotationH = _targetRotationH !== null ? _targetRotationH : 0;
     };
 
 
@@ -81,6 +80,9 @@ var CameraManager = (function () {
     };
 
 
+    /**
+     * Update the camera position
+     */
     var update = function () {
 
         // update the cameraDolly position when it's not a targetPosition and the cameraDolly is in the scene
@@ -101,11 +103,9 @@ var CameraManager = (function () {
                 targetPosition = null;
             }
         }
-        
-        //console.log(cameraDollyHorizontal.rotation);
-        return;
-        if (targetLookAt) {
 
+
+        if (targetLookAt) {
             cameraDollyHorizontal.lookAt(targetLookAt);
             rotationHelper.remove(a);
             a = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), targetLookAt.clone(), 10, 0xffff00);
@@ -113,12 +113,22 @@ var CameraManager = (function () {
         }
 
 
-        console.log("cameraDolly rotation y", cameraDolly.rotation.y, "targetRotationH", targetRotationH);
-        if (targetRotationH !== null) {
+        if (cameraDolly.rotation && targetRotationH !== null) {
+
             // TODO difference should be "shortest" angle, not numerical
             var rotationDifference = cameraDolly.rotation.y - targetRotationH;
 
-            if (Math.abs(rotationDifference) < 5) {
+            console.log("adjust rotation", cameraDolly.rotation.y, targetRotationH, "difference", rotationDifference);
+
+            if (rotationDifference > Math.PI) {
+                console.log("rotation > Math.PI");
+                rotationDifference = -(Math.PI * 2 - rotationDifference);
+                console.log(rotationDifference);
+            }
+
+            //rotationDifference = Math.PI - rotationDifference % Math.PI;
+
+            if (Math.abs(rotationDifference) < 0.1) {
                 console.log("stop target rotation animation");
                 targetRotationH = null;
             } else {
@@ -187,8 +197,14 @@ var CameraManager = (function () {
      */
     function rotate(axis, rotation) {
         if (axis == "x") {
+            console.log("rotate", cameraDolly.rotation.y, Math.PI * 2);
             cameraDolly.rotation.y += rotation;
-            //console.log(cameraDolly.rotation);
+            if (cameraDolly.rotation.y > Math.PI * 2) {
+                cameraDolly.rotation.y -= Math.PI * 2;
+            } else if (cameraDolly.rotation.y < 0) {
+                cameraDolly.rotation.y += Math.PI * 2;
+            }
+            console.log("rotate after", cameraDolly.rotation.y);
             cameraDolly.updateMatrix();
         } else if (axis == "y") {
             // rotate the camera axis along local x-axis (up/down)

@@ -5,9 +5,9 @@
 
 -  **TODO** `(line 4)`  logic for not allowing the camera to penetrate the terrain, i.e. calculate the actual distance between
 -  **TODO** `(line 122)`  difference should be "shortest" angle, not numerical
--  **TODO** `(line 130)`  replace 0.1 with dynamic accelarerated / eased value
--  **TODO** `(line 186)`  this implementation is just broken. period.
--  **TODO** `(line 187)`  initial idea was to translate world Y axis to cameraDolly vector, and use THREE.Matrix4().makeRotationAxis
+-  **TODO** `(line 140)`  replace 0.1 with dynamic accelarerated / eased value
+-  **TODO** `(line 196)`  this implementation is just broken. period.
+-  **TODO** `(line 197)`  initial idea was to translate world Y axis to cameraDolly vector, and use THREE.Matrix4().makeRotationAxis
 
 ## src/js/Game.js
 
