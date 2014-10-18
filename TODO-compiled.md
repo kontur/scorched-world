@@ -4,10 +4,9 @@
 ## src/js/CameraManager.js
 
 -  **TODO** `(line 4)`  logic for not allowing the camera to penetrate the terrain, i.e. calculate the actual distance between
--  **TODO** `(line 122)`  difference should be "shortest" angle, not numerical
--  **TODO** `(line 140)`  replace 0.1 with dynamic accelarerated / eased value
--  **TODO** `(line 196)`  this implementation is just broken. period.
--  **TODO** `(line 197)`  initial idea was to translate world Y axis to cameraDolly vector, and use THREE.Matrix4().makeRotationAxis
+-  **TODO** `(line 109)`  gradual and tweened rotation changes
+-  **TODO** `(line 157)`  replace 0.1 with dynamic accelarerated / eased value
+-  **TODO** `(line 235)`  speed up / ease in out
 
 ## src/js/Game.js
 
@@ -46,9 +45,9 @@
 
 ## src/js/Scene.js
 
--  **NOTE** `(line 98)`  this just emulates the {} hit object, but does not correspond to a similar object as if
--  **TODO** `(line 116)`  low priority: instead of just using the projectile position, aquire a definite terrain
--  **TODO** `(line 124)`  BAD practise to have this event trigger on window :/
+-  **NOTE** `(line 100)`  this just emulates the {} hit object, but does not correspond to a similar object as if
+-  **TODO** `(line 118)`  low priority: instead of just using the projectile position, aquire a definite terrain
+-  **TODO** `(line 126)`  BAD practise to have this event trigger on window :/
 
 ## src/js/Terrain.js
 

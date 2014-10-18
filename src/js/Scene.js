@@ -20,7 +20,10 @@ var Scene = (function () {
 
         CameraManager.init();
         scene.add(CameraManager.getCameraDolly());
-        scene.add(CameraManager.getRotationHelper());
+
+        // debug camera:
+        CameraManager.debug(true);
+        scene.add(CameraManager.getDebugHelper());
 
         renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("gamecanvas") });
 			renderer.setSize(window.innerWidth, window.innerHeight);
@@ -38,6 +41,8 @@ var Scene = (function () {
 
         gravity = new Force(new THREE.Vector3(0, -0.055, 0));
 
+
+        // TMP debug helper
         scene.add(new THREE.AxisHelper(100));
 
         projectiles = [];
@@ -50,10 +55,7 @@ var Scene = (function () {
      */
     var start = function () {
         render();
-        CameraManager.setTo(new THREE.Vector3(-100, 50, 0), new THREE.Vector3(50, 10, 50));
-        setTimeout(function () {
-            CameraManager.animateTo(new THREE.Vector3(-30, 15, 0), new THREE.Vector3(0, 0, 0));
-        }, 250);
+        CameraManager.animateTo(new THREE.Vector3(-30, 15, 0), new THREE.Vector3(0, 0, 0), 0);
     };
 
 
