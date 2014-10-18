@@ -166,6 +166,8 @@ var CameraManager = (function () {
                 //cameraDolly.rotation.y += rotationDifference * 0.15;
             }
         }
+
+        // TODO targetRotationV
     };
 
 
@@ -176,6 +178,15 @@ var CameraManager = (function () {
 
     var disableCameraControl = function () {
         controlsEnabled = false;
+    };
+
+
+    var getLocation = function () {
+        return {
+            position: cameraDolly.position.clone(),
+            lookAt: targetLookAt,
+            targetRotationH: targetRotationH
+        };
     };
 
 
@@ -280,6 +291,8 @@ var CameraManager = (function () {
 
         enableControls: enableCameraControl,
         disableControls: disableCameraControl,
+
+        getLocation: getLocation,
 
         getCamera: function () {
             return camera;

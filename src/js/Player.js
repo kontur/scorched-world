@@ -19,6 +19,7 @@ function Player(options) {
     this.bbox = null;
     this.direction = null;
     this.indicator = null;
+    this.cameraPosition = null;
 
     // TODO adjust fireForceFactor to ensure the other player is always hitable
     this.fireForceFactor = 2;
@@ -97,6 +98,7 @@ function Player(options) {
             player: this
         });
 
+        this.cameraPosition = CameraManager.getLocation();
         $(this).trigger("PROJECTILE_FIRED", projectile);
     };
 

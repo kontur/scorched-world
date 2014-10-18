@@ -162,6 +162,8 @@ var CameraManager = (function () {
                 //cameraDolly.rotation.y += rotationDifference * 0.15;
             }
         }
+
+        // TODO targetRotationV
     };
 
 
@@ -172,6 +174,15 @@ var CameraManager = (function () {
 
     var disableCameraControl = function () {
         controlsEnabled = false;
+    };
+
+
+    var getLocation = function () {
+        return {
+            position: cameraDolly.position.clone(),
+            lookAt: targetLookAt,
+            targetRotationH: targetRotationH
+        };
     };
 
 
@@ -277,6 +288,8 @@ var CameraManager = (function () {
         enableControls: enableCameraControl,
         disableControls: disableCameraControl,
 
+        getLocation: getLocation,
+
         getCamera: function () {
             return camera;
         },
@@ -341,6 +354,7 @@ var Game = (function () {
         pos.y = 35;
 
         // TODO eventually store each player's own last camera rotation and set it here when their turn starts
+        console.log("playerCamera", playerCamera);
         CameraManager.animateTo(pos, players[currentTurn].position, 0);
 
         if (players[currentTurn].isHuman) {
@@ -365,6 +379,9 @@ var Game = (function () {
                 players[currentTurn].disableControls();
                 CameraManager.disableControls();
             }
+
+            console.log(CameraManager.getLocation());
+
             currentTurn++;
             if (currentTurn >= players.length) {
                 currentTurn = 0;
@@ -628,6 +645,7 @@ function Player(options) {
     this.bbox = null;
     this.direction = null;
     this.indicator = null;
+    this.cameraPosition = null;
 
     // TODO adjust fireForceFactor to ensure the other player is always hitable
     this.fireForceFactor = 2;
@@ -706,6 +724,7 @@ function Player(options) {
             player: this
         });
 
+        this.cameraPosition = CameraManager.getLocation();
         $(this).trigger("PROJECTILE_FIRED", projectile);
     };
 

@@ -6,13 +6,14 @@
 -  **TODO** `(line 4)`  logic for not allowing the camera to penetrate the terrain, i.e. calculate the actual distance between
 -  **TODO** `(line 113)`  gradual and tweened rotation changes
 -  **TODO** `(line 164)`  replace 0.1 with dynamic accelarerated / eased value
--  **TODO** `(line 252)`  speed up / ease in out
+-  **TODO** `(line 170)`  targetRotationV
+-  **TODO** `(line 263)`  speed up / ease in out
 
 ## src/js/Game.js
 
 -  **TODO** `(line 40)`  instead of x,z -15 those should be behind the player FACING THE DIRECTION of other players (or previous
 -  **TODO** `(line 46)`  eventually store each player's own last camera rotation and set it here when their turn starts
--  **TODO** `(line 53)`  plenty of AI and animation logic
+-  **TODO** `(line 54)`  plenty of AI and animation logic
 
 ## src/js/Player.AIPlayer.js
 
@@ -31,10 +32,10 @@
 
 ## src/js/Player.js
 
--  **TODO** `(line 23)`  adjust fireForceFactor to ensure the other player is always hitable
--  **TODO** `(line 83)`  prevent multiple simultaneous projectiles in the air
--  **TODO** `(line 84)`  projectile mass has no effect
--  **TODO** `(line 217)`  visually signify player having lost
+-  **TODO** `(line 24)`  adjust fireForceFactor to ensure the other player is always hitable
+-  **TODO** `(line 84)`  prevent multiple simultaneous projectiles in the air
+-  **TODO** `(line 85)`  projectile mass has no effect
+-  **TODO** `(line 219)`  visually signify player having lost
 
 ## src/js/Projectile.js
 
