@@ -18,46 +18,48 @@ var CameraManager = (function () {
     //
     // the camera object is the three.js camera itself, which does not move at all and is rotated on init to line up
     // with the other dollies' lookAt along the their z-axis
-    var camera;
-    var cameraDolly;
-    var cameraDollyVertical;
-    var cameraDollyHorizontal;
+    var camera,
+        cameraDolly,
+        cameraDollyVertical,
+        cameraDollyHorizontal;
 
-    var targetPosition = null;
-    var targetLookAt;
-    var targetRotationH = null;
+    // variables to animate the position and rotations to
+    var targetPosition = null,
+        targetLookAt,
+        targetRotationH = null;
 
     var controlsEnabled = false;
 
     // debug helper objects and flags
-    var debug = false;
-    var arrowHelper;
-    var dollyHelper;
-    var dollyHorizontalHelper;
-    var debugHelper;
+    var debug = false,
+        arrowHelper,
+        dollyHelper,
+        dollyHorizontalHelper,
+        debugHelper,
+        cameraDollyVerticalAxis,
+        cameraDollyAxis;
 
 
     // PUBLIC METHODS
     // **************
+
 
     var init = function () {
         cameraDolly = new THREE.Object3D();
         cameraDollyVertical = new THREE.Object3D();
         cameraDollyHorizontal = new THREE.Object3D();
 
-        camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 150);
+        camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 150);
         // rotate camera once so that it aligns with the cameraDollyHorizontal's .lookAt direction
         camera.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI);
 
         cameraDollyVertical.translateZ(-25);
         cameraDollyVertical.add(camera);
-        cameraDollyVertical.add(new THREE.AxisHelper(15));
 
         cameraDollyHorizontal.add(cameraDollyVertical);
         cameraDollyHorizontal.matrixAutoUpdate = true;
 
         cameraDolly.add(cameraDollyHorizontal);
-        cameraDolly.add(new THREE.AxisHelper(25));
 
         setupCameraControls();
 
@@ -69,6 +71,8 @@ var CameraManager = (function () {
 
         // init this debugHelper either way
         debugHelper = new THREE.Object3D();
+        cameraDollyVerticalAxis = new THREE.AxisHelper(15);
+        cameraDollyAxis = new THREE.AxisHelper(25);
 
     };
 
@@ -131,18 +135,21 @@ var CameraManager = (function () {
 
 
         // visually highlight the lookAt target in debug mode
-        if (debug && targetLookAt) {
+        if (targetLookAt) {
             cameraDollyHorizontal.lookAt(targetLookAt);
-            debugHelper.remove(arrowHelper);
-            arrowHelper = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), targetLookAt.clone(), 10, 0xffff00);
-            debugHelper.add(arrowHelper);
+
+            if (true === debug) {
+                debugHelper.remove(arrowHelper);
+                arrowHelper = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), targetLookAt.clone(), 10, 0xffff00);
+                debugHelper.add(arrowHelper);
+            }
         }
 
 
         // update the camera rotations if any are set
         if (cameraDolly.rotation && targetRotationH !== null) {
             var rotationDifference = cameraDolly.rotation.y - targetRotationH;
-            
+
             // for values beyond 180 degrees calculate negative (shorter) angle
             if (rotationDifference > Math.PI) {
                 rotationDifference = -(Math.PI * 2 - rotationDifference);
@@ -173,17 +180,27 @@ var CameraManager = (function () {
 
 
     var debugMode = function (bool) {
-        debug = bool;
-        if (debug) {
+        if (bool === true) {
+            debug = bool;
             var g = new THREE.BoxGeometry(2, 2, 2);
-            var m = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true });
+            var m = new THREE.MeshBasicMaterial({color: 0x00ffff, wireframe: true});
             dollyHelper = new THREE.Mesh(g, m);
             cameraDolly.add(dollyHelper);
 
             var geom = new THREE.BoxGeometry(5, 5, 5);
-            var mat = new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true });
+            var mat = new THREE.MeshBasicMaterial({color: 0xffff00, wireframe: true});
             dollyHorizontalHelper = new THREE.Mesh(geom, mat);
             cameraDollyHorizontal.add(dollyHorizontalHelper);
+
+            cameraDollyVertical.add(cameraDollyVerticalAxis);
+            cameraDolly.add(cameraDollyAxis);
+        } else {
+            debug = false;
+            cameraDolly.remove(dollyHelper);
+            cameraDollyHorizontal.remove(dollyHorizontalHelper);
+            cameraDollyVertical.remove(cameraDollyVerticalAxis);
+            cameraDolly.remove(cameraDollyAxis);
+            debugHelper.remove(arrowHelper);
         }
     };
 
@@ -228,17 +245,17 @@ var CameraManager = (function () {
 
     /**
      * Rotate the camera to either look up an down at current focus point or rotate around the current focus point
-     * 
+     *
      * @param axis
      * @param rotation
-     * 
+     *
      * TODO speed up / ease in out
      */
     function rotate(axis, rotation) {
         if (axis == "x") {
             // rotate the camera along the local y axis around its focal point
             cameraDolly.rotation.y += rotation;
-            
+
             // clamp assigned value to 0 - Math.PI * 2 
             if (cameraDolly.rotation.y > Math.PI * 2) {
                 cameraDolly.rotation.y -= Math.PI * 2;

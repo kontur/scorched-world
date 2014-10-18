@@ -22,8 +22,8 @@ var Scene = (function () {
         scene.add(CameraManager.getCameraDolly());
 
         // debug camera:
-        CameraManager.debug(true);
-        scene.add(CameraManager.getDebugHelper());
+        //CameraManager.debug(true);
+        //scene.add(CameraManager.getDebugHelper());
 
         renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("gamecanvas") });
 			renderer.setSize(window.innerWidth, window.innerHeight);
@@ -55,6 +55,7 @@ var Scene = (function () {
      */
     var start = function () {
         render();
+        CameraManager.setTo(new THREE.Vector3(-30, 15, 0), new THREE.Vector3(0, 0, 0));
         CameraManager.animateTo(new THREE.Vector3(-30, 15, 0), new THREE.Vector3(0, 0, 0), 0);
     };
 
