@@ -4,16 +4,15 @@
 ## src/js/CameraManager.js
 
 -  **TODO** `(line 4)`  logic for not allowing the camera to penetrate the terrain, i.e. calculate the actual distance between
--  **TODO** `(line 113)`  gradual and tweened rotation changes
--  **TODO** `(line 164)`  replace 0.1 with dynamic accelarerated / eased value
--  **TODO** `(line 170)`  targetRotationV
--  **TODO** `(line 263)`  speed up / ease in out
+-  **TODO** `(line 123)`  gradual and tweened rotation changes
+-  **TODO** `(line 174)`  replace 0.1 with dynamic accelarerated / eased value
+-  **TODO** `(line 282)`  speed up / ease in out
 
 ## src/js/Game.js
 
 -  **TODO** `(line 40)`  instead of x,z -15 those should be behind the player FACING THE DIRECTION of other players (or previous
 -  **TODO** `(line 46)`  eventually store each player's own last camera rotation and set it here when their turn starts
--  **TODO** `(line 54)`  plenty of AI and animation logic
+-  **TODO** `(line 53)`  plenty of AI and animation logic
 
 ## src/js/Player.AIPlayer.js
 

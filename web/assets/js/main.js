@@ -1,4 +1,4 @@
-/*!  - v - 2014-10-18
+/*!  - v - 2014-10-20
 * Copyright (c) 2014 Johannes Neumeier; Licensed  */
 var CameraManager = (function () {
 
@@ -22,7 +22,14 @@ var CameraManager = (function () {
     // variables to animate the position and rotations to
     var targetPosition = null,
         targetLookAt,
-        targetRotationH = null;
+        targetRotationH = null,
+        targetRotationV = null;
+
+    var cameraDefaults = {
+        maxV: -1.4,
+        minV: 1.4,
+        playerV: 0.8
+    };
 
     var controlsEnabled = false;
 
@@ -63,6 +70,7 @@ var CameraManager = (function () {
         $(window).on("PROJECTILE_MOVE", function (e, data) {
             targetLookAt = data.position;
             targetRotationH = 0;
+            targetRotationV = 0;
         });
 
         // init this debugHelper either way
@@ -80,10 +88,12 @@ var CameraManager = (function () {
      * @param lookAt
      * @param _targetRotationH
      */
-    var animateTo = function (position, lookAt, _targetRotationH) {
+    var animateTo = function (position, lookAt, _targetRotationH, _targetRotationV) {
         targetPosition = position;
         targetLookAt = lookAt;
         targetRotationH = _targetRotationH !== null ? _targetRotationH : 0;
+        targetRotationV = _targetRotationV !== null ?
+            THREE.Math.clamp(cameraDefaults.minV, cameraDefaults.maxV,_targetRotationV) : 0;
     };
 
 
@@ -142,7 +152,7 @@ var CameraManager = (function () {
         }
 
 
-        // update the camera rotations if any are set
+        // update the camera horizontal rotation if any isset
         if (cameraDolly.rotation && targetRotationH !== null) {
             var rotationDifference = cameraDolly.rotation.y - targetRotationH;
 
@@ -159,11 +169,20 @@ var CameraManager = (function () {
                 // otherwise approach target rotation angle
                 // TODO replace 0.1 with dynamic accelarerated / eased value
                 cameraDolly.rotation.y += 0.1;
-                //cameraDolly.rotation.y += rotationDifference * 0.15;
             }
         }
 
-        // TODO targetRotationV
+        // update the camera vertical rotation if any is set
+        if (cameraDollyVertical.rotation && targetRotationV !== null) {
+            var rotationDifference = targetRotationV - cameraDollyVertical.rotation.x;
+
+            // if the target rotation is as good as reached, stop rotating and entering this loop
+            if (Math.abs(rotationDifference) < 0.1) {
+                targetRotationV = null;
+            } else {
+                cameraDollyVertical.rotation.x += rotationDifference;
+            }
+        }
     };
 
 
@@ -296,6 +315,9 @@ var CameraManager = (function () {
         getCameraDolly: function () {
             return cameraDolly;
         },
+        getCameraDefaults: function () {
+            return cameraDefaults;
+        },
         getDebugHelper: function () {
             return debugHelper;
         },
@@ -354,8 +376,7 @@ var Game = (function () {
         pos.y = 35;
 
         // TODO eventually store each player's own last camera rotation and set it here when their turn starts
-        console.log("playerCamera", playerCamera);
-        CameraManager.animateTo(pos, players[currentTurn].position, 0);
+        CameraManager.animateTo(pos, players[currentTurn].position, 0, CameraManager.getCameraDefaults().playerV);
 
         if (players[currentTurn].isHuman) {
             players[currentTurn].enableControls();
@@ -379,8 +400,6 @@ var Game = (function () {
                 players[currentTurn].disableControls();
                 CameraManager.disableControls();
             }
-
-            console.log(CameraManager.getLocation());
 
             currentTurn++;
             if (currentTurn >= players.length) {
@@ -1021,7 +1040,7 @@ var Scene = (function () {
     var start = function () {
         render();
         CameraManager.setTo(new THREE.Vector3(-30, 15, 0), new THREE.Vector3(0, 0, 0));
-        CameraManager.animateTo(new THREE.Vector3(-30, 15, 0), new THREE.Vector3(0, 0, 0), 0);
+        CameraManager.animateTo(new THREE.Vector3(-30, 15, 0), new THREE.Vector3(0, 0, 0), 0, CameraManager.getCameraDefaults().maxV);
     };
 
 

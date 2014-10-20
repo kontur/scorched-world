@@ -44,8 +44,7 @@ var Game = (function () {
         pos.y = 35;
 
         // TODO eventually store each player's own last camera rotation and set it here when their turn starts
-        console.log("playerCamera", playerCamera);
-        CameraManager.animateTo(pos, players[currentTurn].position, 0);
+        CameraManager.animateTo(pos, players[currentTurn].position, 0, CameraManager.getCameraDefaults().playerV);
 
         if (players[currentTurn].isHuman) {
             players[currentTurn].enableControls();

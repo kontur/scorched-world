@@ -1,4 +1,4 @@
-/*!  - v - 2014-10-18
+/*!  - v - 2014-10-20
 * Copyright (c) 2014 Johannes Neumeier; Licensed  */
 /*!
  * jQuery JavaScript Library v2.1.1

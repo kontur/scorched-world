@@ -56,7 +56,7 @@ var Scene = (function () {
     var start = function () {
         render();
         CameraManager.setTo(new THREE.Vector3(-30, 15, 0), new THREE.Vector3(0, 0, 0));
-        CameraManager.animateTo(new THREE.Vector3(-30, 15, 0), new THREE.Vector3(0, 0, 0), 0);
+        CameraManager.animateTo(new THREE.Vector3(-30, 15, 0), new THREE.Vector3(0, 0, 0), 0, CameraManager.getCameraDefaults().maxV);
     };
 
 
