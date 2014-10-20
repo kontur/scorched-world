@@ -184,7 +184,7 @@ var CameraManager = (function () {
             if (Math.abs(rotationDifference) < 0.1) {
                 targetRotationV = null;
             } else {
-                cameraDollyVertical.rotation.x += rotationDifference;
+                cameraDollyVertical.rotation.x += rotationDifference / 4;
             }
         }
     };
