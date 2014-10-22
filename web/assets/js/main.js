@@ -1,4 +1,4 @@
-/*!  - v - 2014-10-20
+/*!  - v - 2014-10-22
 * Copyright (c) 2014 Johannes Neumeier; Licensed  */
 var CameraManager = (function () {
 
@@ -1233,14 +1233,21 @@ Terrain = function() {
                     // asume this is an ok position, but
                     found = true;
 
-                    // a) check there is no duplicates, i.e. the position has not yet been assigned for another player
-                    for (var p = 0; p < pos.length; p++) {
-                        if (pos[p] == position) {
-                            found = false;
+                    // if this is not the first player position being determined, then
+                    if (pos.length > 0) {
+                        for (var p = 0; p < pos.length; p++) {
+                            // a) check there is no duplicates, i.e. the position has not yet been assigned for another player
+                            if (pos[p] == position) {
+                                found = false;
+                            }
+                            var distance = position.distanceTo(pos[p]);
+
+                            // b) check that distance to other players is at least 35% the width of the playable area
+                            if (distance / widthArea < 0.35) {
+                                found = false;
+                            }
                         }
                     }
-
-                    //TODO and b) make sure there is minimumDistance (percent of main area) between the players
                 }
             }
             position.y += playerOffsetY;

@@ -4,9 +4,10 @@
 ## src/js/CameraManager.js
 
 -  **TODO** `(line 4)`  logic for not allowing the camera to penetrate the terrain, i.e. calculate the actual distance between
--  **TODO** `(line 123)`  gradual and tweened rotation changes
--  **TODO** `(line 174)`  replace 0.1 with dynamic accelarerated / eased value
--  **TODO** `(line 282)`  speed up / ease in out
+-  **TODO** `(line 7)`  keep minimum distance to lookat, for example when a projectile fires past the camera, it rotates too fast
+-  **TODO** `(line 126)`  gradual and tweened rotation changes
+-  **TODO** `(line 177)`  replace 0.1 with dynamic accelarerated / eased value
+-  **TODO** `(line 285)`  speed up / ease in out
 
 ## src/js/Game.js
 
@@ -52,7 +53,6 @@
 ## src/js/Terrain.js
 
 -  **TODO** `(line 46)`  make these parameteres and frequencies more random still
--  **TODO** `(line 110)`  and b) make sure there is minimumDistance (percent of main area) between the players
 
 ## src/js/UI.js
 

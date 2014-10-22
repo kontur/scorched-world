@@ -3,6 +3,9 @@
  *
  * TODO logic for not allowing the camera to penetrate the terrain, i.e. calculate the actual distance between
  * camera position (not dolly, but actual camera) and the terrain at that pos, then offset it to a minimum buffer
+ *
+ * TODO keep minimum distance to lookat, for example when a projectile fires past the camera, it rotates too fast
+ * because of too close lookat target
  */
 var CameraManager = (function () {
 
