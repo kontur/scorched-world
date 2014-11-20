@@ -1,4 +1,4 @@
-/*!  - v - 2014-10-22
+/*!  - v - 2014-11-20
 * Copyright (c) 2014 Johannes Neumeier; Licensed  */
 var CameraManager = (function () {
 
@@ -34,7 +34,7 @@ var CameraManager = (function () {
     var controlsEnabled = false;
 
     // debug helper objects and flags
-    var debug = false,
+    var debug = true,
         arrowHelper,
         dollyHelper,
         dollyHorizontalHelper,
@@ -66,11 +66,15 @@ var CameraManager = (function () {
 
         setupCameraControls();
 
+
+        // TODO refine this implementation; for now, this has too many unexpected odd camera truns in various edge cases
+        // like for example when the projectile flies past the camera too close the camera spins too fast
+
         // listen for events informing of a projectile mid-air so the camera can follow it in its flight path
         $(window).on("PROJECTILE_MOVE", function (e, data) {
-            targetLookAt = data.position;
-            targetRotationH = 0;
-            targetRotationV = 0;
+            //targetLookAt = data.position;
+            //targetRotationH = 0;
+            //targetRotationV = 0;
         });
 
         // init this debugHelper either way
@@ -93,7 +97,7 @@ var CameraManager = (function () {
         targetLookAt = lookAt;
         targetRotationH = _targetRotationH !== null ? _targetRotationH : 0;
         targetRotationV = _targetRotationV !== null ?
-            THREE.Math.clamp(cameraDefaults.minV, cameraDefaults.maxV,_targetRotationV) : 0;
+            THREE.Math.clamp(cameraDefaults.minV, cameraDefaults.maxV, _targetRotationV) : 0;
     };
 
 
@@ -182,6 +186,14 @@ var CameraManager = (function () {
             } else {
                 cameraDollyVertical.rotation.x += rotationDifference / 4;
             }
+        }
+    };
+
+
+    var updateAspect = function (aspectRatio) {
+        if (camera) {
+            camera.aspect = aspectRatio;
+            camera.updateProjectionMatrix();
         }
     };
 
@@ -304,6 +316,8 @@ var CameraManager = (function () {
         setTo: setTo,
         update: update,
 
+        updateAspect: updateAspect,
+
         enableControls: enableCameraControl,
         disableControls: disableCameraControl,
 
@@ -362,6 +376,9 @@ var Game = (function () {
     };
 
 
+    /**
+     * Initiate the next turn
+     */
     function nextTurn() {
         console.log("----------------------------------");
         console.log("Game.nextTurn()", currentTurn, players[currentTurn].isHuman);
@@ -378,6 +395,8 @@ var Game = (function () {
         // TODO eventually store each player's own last camera rotation and set it here when their turn starts
         CameraManager.animateTo(pos, players[currentTurn].position, 0, CameraManager.getCameraDefaults().playerV);
 
+
+        // When the player is a human, hand over controls until they have fired otherwise make AI player fire automatically
         if (players[currentTurn].isHuman) {
             players[currentTurn].enableControls();
             CameraManager.enableControls();
@@ -388,13 +407,18 @@ var Game = (function () {
     }
 
 
+    /**
+     * After this rounds PROJECTILE_IMPACT check the damage done, calculate player life updates and see how the game
+     * continues
+     */
     function updateDamage() {
         console.log("Game.updateDamage()");
         $(window).off("PROJECTILE_IMPACT", updateDamage);
 
+        // check and collect the players that are alive still
         var alive = playersAlive();
 
-        // if no winner
+        // if no winner yet
         if (alive.length > 1) {
             if (players[currentTurn].isHuman) {
                 players[currentTurn].disableControls();
@@ -413,6 +437,11 @@ var Game = (function () {
     }
 
 
+    /**
+     * Simple helper to collect all alive players into an array
+     *
+     * @returns {Array} The players alive still
+     */
     function playersAlive() {
         var alivePlayers = [];
         for (var p in players) {
@@ -988,7 +1017,6 @@ var Projectile = function (options) {
 var Scene = (function () {
 
     var scene,
-        camera,
         renderer,
         projectiles,
         terrain;
@@ -1132,6 +1160,11 @@ var Scene = (function () {
         addProjectile: addProjectile,
         getTerrain: function () {
             return terrain;
+        },
+        setRendererSize: function (w, h) {
+            if (renderer) {
+                renderer.setSize(w, h);
+            }
         }
     };
 
@@ -1326,19 +1359,20 @@ var UI = (function () {
     };
 
 
-    //TODO this resizing doesn't really work yet as intended; it stretches the scene
+    /**
+     * update the rendering size of the scene
+     */
     function onResize() {
-        var w = $(window).width();
-        var h = $(window).height();
+        var w = window.innerWidth;
+        var h = window.innerHeight;
 
         $("#gamecanvas").css("width", w + "px");
         $("#gamecanvas").css("height", h + "px");
+
+        CameraManager.updateAspect(w / h);
+        Scene.setRendererSize(w, h);
     }
 
-
-    //function resetScene() {
-    //    Game.reset();
-    //}
 
     function startGame() {
         var players = [];
@@ -1360,7 +1394,7 @@ var UI = (function () {
 
 
         // lazy dev mode
-        while (players.length < 2) {
+        while (players.length < 4) {
             players.push(new HumanPlayer({ color: playerColors[players.length], name: "Foobar" }));
             hideMenu();
         }
@@ -1473,7 +1507,6 @@ var Utils = (function () {
         }
     };
 }());
-
 $(function() {
 
     UI.init();

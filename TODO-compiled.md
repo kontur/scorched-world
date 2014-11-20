@@ -5,15 +5,16 @@
 
 -  **TODO** `(line 4)`  logic for not allowing the camera to penetrate the terrain, i.e. calculate the actual distance between
 -  **TODO** `(line 7)`  keep minimum distance to lookat, for example when a projectile fires past the camera, it rotates too fast
--  **TODO** `(line 126)`  gradual and tweened rotation changes
--  **TODO** `(line 177)`  replace 0.1 with dynamic accelarerated / eased value
--  **TODO** `(line 285)`  speed up / ease in out
+-  **TODO** `(line 77)`  refine this implementation; for now, this has too many unexpected odd camera truns in various edge cases
+-  **TODO** `(line 130)`  gradual and tweened rotation changes
+-  **TODO** `(line 181)`  replace 0.1 with dynamic accelarerated / eased value
+-  **TODO** `(line 297)`  speed up / ease in out
 
 ## src/js/Game.js
 
--  **TODO** `(line 40)`  instead of x,z -15 those should be behind the player FACING THE DIRECTION of other players (or previous
--  **TODO** `(line 46)`  eventually store each player's own last camera rotation and set it here when their turn starts
--  **TODO** `(line 53)`  plenty of AI and animation logic
+-  **TODO** `(line 43)`  instead of x,z -15 those should be behind the player FACING THE DIRECTION of other players (or previous
+-  **TODO** `(line 49)`  eventually store each player's own last camera rotation and set it here when their turn starts
+-  **TODO** `(line 58)`  plenty of AI and animation logic
 
 ## src/js/Player.AIPlayer.js
 
@@ -46,17 +47,13 @@
 
 ## src/js/Scene.js
 
--  **NOTE** `(line 101)`  this just emulates the {} hit object, but does not correspond to a similar object as if
--  **TODO** `(line 119)`  low priority: instead of just using the projectile position, aquire a definite terrain
--  **TODO** `(line 127)`  BAD practise to have this event trigger on window :/
+-  **NOTE** `(line 100)`  this just emulates the {} hit object, but does not correspond to a similar object as if
+-  **TODO** `(line 118)`  low priority: instead of just using the projectile position, aquire a definite terrain
+-  **TODO** `(line 126)`  BAD practise to have this event trigger on window :/
 
 ## src/js/Terrain.js
 
 -  **TODO** `(line 46)`  make these parameteres and frequencies more random still
-
-## src/js/UI.js
-
--  **TODO** `(line 19)`  this resizing doesn't really work yet as intended; it stretches the scene
 
 ## src/js/Utils.js
 

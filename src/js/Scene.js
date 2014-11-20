@@ -4,7 +4,6 @@
 var Scene = (function () {
 
     var scene,
-        camera,
         renderer,
         projectiles,
         terrain;
@@ -148,6 +147,11 @@ var Scene = (function () {
         addProjectile: addProjectile,
         getTerrain: function () {
             return terrain;
+        },
+        setRendererSize: function (w, h) {
+            if (renderer) {
+                renderer.setSize(w, h);
+            }
         }
     };
 

@@ -16,19 +16,20 @@ var UI = (function () {
     };
 
 
-    //TODO this resizing doesn't really work yet as intended; it stretches the scene
+    /**
+     * update the rendering size of the scene
+     */
     function onResize() {
-        var w = $(window).width();
-        var h = $(window).height();
+        var w = window.innerWidth;
+        var h = window.innerHeight;
 
         $("#gamecanvas").css("width", w + "px");
         $("#gamecanvas").css("height", h + "px");
+
+        CameraManager.updateAspect(w / h);
+        Scene.setRendererSize(w, h);
     }
 
-
-    //function resetScene() {
-    //    Game.reset();
-    //}
 
     function startGame() {
         var players = [];
@@ -50,7 +51,7 @@ var UI = (function () {
 
 
         // lazy dev mode
-        while (players.length < 2) {
+        while (players.length < 4) {
             players.push(new HumanPlayer({ color: playerColors[players.length], name: "Foobar" }));
             hideMenu();
         }

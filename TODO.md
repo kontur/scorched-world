@@ -5,14 +5,17 @@
 * working opponent AI
 * working logic for detecting a win in the game
 
+## Important playability improvements
+* implement better aiming controls that incrementally speed up, but start with very small angle change, so aiming can be more precise
+
 ### Improvement from crude initial implementations
-* player position centerish on the map and not too close to each other
 * player controls for firing projectiles (more than just visual indicators as is atm)
 * player / AI visual distinction
 * AI mustn't shoot into immediate surrounding terrain walls (kill itself) > base random rotation on average face normal
 * refactor event system and avoid having events on $(window) (bad, bad, bad)
 * better projectile and hit 3D models as well as animations
 * browser resize should not scale the scene but re-format the layout
+* visual indicator of dead players (when there is more than 2 players)
 
 #### Low priority cool to have (for now)
 * seemingly endless terrain around the arena (kinda there, needs proper styling)

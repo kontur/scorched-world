@@ -41,7 +41,7 @@ var CameraManager = (function () {
     var controlsEnabled = false;
 
     // debug helper objects and flags
-    var debug = false,
+    var debug = true,
         arrowHelper,
         dollyHelper,
         dollyHorizontalHelper,
@@ -73,11 +73,15 @@ var CameraManager = (function () {
 
         setupCameraControls();
 
+
+        // TODO refine this implementation; for now, this has too many unexpected odd camera truns in various edge cases
+        // like for example when the projectile flies past the camera too close the camera spins too fast
+
         // listen for events informing of a projectile mid-air so the camera can follow it in its flight path
         $(window).on("PROJECTILE_MOVE", function (e, data) {
-            targetLookAt = data.position;
-            targetRotationH = 0;
-            targetRotationV = 0;
+            //targetLookAt = data.position;
+            //targetRotationH = 0;
+            //targetRotationV = 0;
         });
 
         // init this debugHelper either way
@@ -100,7 +104,7 @@ var CameraManager = (function () {
         targetLookAt = lookAt;
         targetRotationH = _targetRotationH !== null ? _targetRotationH : 0;
         targetRotationV = _targetRotationV !== null ?
-            THREE.Math.clamp(cameraDefaults.minV, cameraDefaults.maxV,_targetRotationV) : 0;
+            THREE.Math.clamp(cameraDefaults.minV, cameraDefaults.maxV, _targetRotationV) : 0;
     };
 
 
@@ -189,6 +193,14 @@ var CameraManager = (function () {
             } else {
                 cameraDollyVertical.rotation.x += rotationDifference / 4;
             }
+        }
+    };
+
+
+    var updateAspect = function (aspectRatio) {
+        if (camera) {
+            camera.aspect = aspectRatio;
+            camera.updateProjectionMatrix();
         }
     };
 
@@ -310,6 +322,8 @@ var CameraManager = (function () {
         animateTo: animateTo,
         setTo: setTo,
         update: update,
+
+        updateAspect: updateAspect,
 
         enableControls: enableCameraControl,
         disableControls: disableCameraControl,

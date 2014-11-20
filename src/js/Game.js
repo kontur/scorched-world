@@ -1,5 +1,5 @@
 /**
- * General high-level interface for controlling the game
+ * General high-level interface for controlling the game flow and turns
  */
 var Game = (function () {
 
@@ -30,6 +30,9 @@ var Game = (function () {
     };
 
 
+    /**
+     * Initiate the next turn
+     */
     function nextTurn() {
         console.log("----------------------------------");
         console.log("Game.nextTurn()", currentTurn, players[currentTurn].isHuman);
@@ -46,6 +49,8 @@ var Game = (function () {
         // TODO eventually store each player's own last camera rotation and set it here when their turn starts
         CameraManager.animateTo(pos, players[currentTurn].position, 0, CameraManager.getCameraDefaults().playerV);
 
+
+        // When the player is a human, hand over controls until they have fired otherwise make AI player fire automatically
         if (players[currentTurn].isHuman) {
             players[currentTurn].enableControls();
             CameraManager.enableControls();
@@ -56,13 +61,18 @@ var Game = (function () {
     }
 
 
+    /**
+     * After this rounds PROJECTILE_IMPACT check the damage done, calculate player life updates and see how the game
+     * continues
+     */
     function updateDamage() {
         console.log("Game.updateDamage()");
         $(window).off("PROJECTILE_IMPACT", updateDamage);
 
+        // check and collect the players that are alive still
         var alive = playersAlive();
 
-        // if no winner
+        // if no winner yet
         if (alive.length > 1) {
             if (players[currentTurn].isHuman) {
                 players[currentTurn].disableControls();
@@ -81,6 +91,11 @@ var Game = (function () {
     }
 
 
+    /**
+     * Simple helper to collect all alive players into an array
+     *
+     * @returns {Array} The players alive still
+     */
     function playersAlive() {
         var alivePlayers = [];
         for (var p in players) {
