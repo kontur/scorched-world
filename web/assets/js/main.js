@@ -34,7 +34,7 @@ var CameraManager = (function () {
     var controlsEnabled = false;
 
     // debug helper objects and flags
-    var debug = true,
+    var debug = false,
         arrowHelper,
         dollyHelper,
         dollyHorizontalHelper,
@@ -518,9 +518,6 @@ function AIPlayer(options) {
     this.animateTo = function (rotationH, rotationV) {
         this.canon.rotation.x = rotationV;
         this.obj.rotation.y = rotationH;
-
-        this.bbox.update();
-
         this.checkTangent(Scene.getTerrain().objForHittest);
     };
 
@@ -586,6 +583,10 @@ function HumanPlayer(options) {
 
     var that = this;
 
+    that.rotationStep = 1;
+    that.rotationStepMultiplier = 1.1;
+    that.rotationStepMax = 10;
+
     this.isHuman = true;
     this.controlsEnabled = false;
 
@@ -601,6 +602,7 @@ function HumanPlayer(options) {
         console.log("Player controls disabled");
     };
 
+
     function setupControls () {
         console.log("HumanPlayer.setupControls()");
         $(window).on("keydown", onKeyDown);
@@ -609,34 +611,34 @@ function HumanPlayer(options) {
 
 
     /**
-     * TODO improve rotating by adding additive rotation speed when key pressed continuously
+     *
      */
     function onKeyDown(e) {
         if (!that.controlsEnabled) {
             return false;
         }
 
-        var rotationStep = 5;
+        that.rotationStep = Math.min(that.rotationStepMax, that.rotationStep * that.rotationStepMultiplier);
 
         switch (e.keyCode) {
             // arrow up
             case 40:
-                that.addAngle(rotationStep * (Math.PI / 180));
+                that.addAngle(that.rotationStep * (Math.PI / 180));
                 break;
 
             // arrow down
             case 38:
-                that.addAngle(-rotationStep * (Math.PI / 180));
+                that.addAngle(-that.rotationStep * (Math.PI / 180));
                 break;
 
             // arrow left
             case 39:
-                that.addRotation(-rotationStep * (Math.PI / 180));
+                that.addRotation(-that.rotationStep * (Math.PI / 180));
                 break;
 
             // arrow right
             case 37:
-                that.addRotation(rotationStep * (Math.PI / 180));
+                that.addRotation(that.rotationStep * (Math.PI / 180));
                 break;
 
             // space bar
@@ -651,10 +653,14 @@ function HumanPlayer(options) {
         }
     }
 
+
     function onKeyUp(e) {
         if (!that.controlsEnabled) {
             return false;
         }
+
+        // reset rotationStep back to 1
+        that.rotationStep = 1;
 
         if (e.keyCode == "32") {
             // spacebar was released
@@ -699,7 +705,6 @@ function Player(options) {
     this.indicator = null;
     this.cameraPosition = null;
 
-    // TODO adjust fireForceFactor to ensure the other player is always hitable
     this.fireForceFactor = 2;
     this.fireForce = 0;
     this.fireButtonTimeout = null;
@@ -710,7 +715,13 @@ function Player(options) {
     this.init = function () {
         console.log("Player.init()", this.options.color);
         var geometry = new THREE.IcosahedronGeometry(1, 0);
-        var material = new THREE.MeshPhongMaterial({ ambient: 0xffffff, color: this.options.color, specular: this.options.color, shininess: 10, shading: THREE.FlatShading });
+        var material = new THREE.MeshPhongMaterial({
+            ambient: 0xffffff,
+            color: this.options.color,
+            specular: this.options.color,
+            shininess: 10,
+            shading: THREE.FlatShading
+        });
         this.mesh = new THREE.Mesh(geometry, material);
         this.obj = new THREE.Object3D();
 
@@ -718,7 +729,13 @@ function Player(options) {
         var geo = new THREE.CylinderGeometry(0.15, 0.5, canonH);
         geo.applyMatrix(new THREE.Matrix4().makeTranslation(0, canonH / 2, 0));
 
-        var mat = new THREE.MeshPhongMaterial({ ambient: 0xff0000, color: 0x00ffff, specular: 0x0099ff, shininess: 30, shading: THREE.FlatShading });
+        var mat = new THREE.MeshPhongMaterial({
+            ambient: 0xff0000,
+            color: 0x00ffff,
+            specular: 0x0099ff,
+            shininess: 30,
+            shading: THREE.FlatShading
+        });
         this.canon = new THREE.Mesh(geo, mat);
 
         this.obj.add(this.mesh);
@@ -745,10 +762,8 @@ function Player(options) {
         var geom = new THREE.Geometry();
         geom.vertices.push(this.position);
         geom.vertices.push(new THREE.Vector3(this.position.x, 10, this.position.z));
-        var mat = new THREE.LineBasicMaterial({ color: 0xff0000 });
+        var mat = new THREE.LineBasicMaterial({color: this.options.color});
         this.indicator = new THREE.Line(geom, mat);
-
-        this.bbox.update();
     };
 
 
@@ -785,7 +800,7 @@ function Player(options) {
      * manipulate the player's canon vertical angle
      * @param angleChange in radians
      */
-    this.addAngle = function(angleChange) {
+    this.addAngle = function (angleChange) {
         // check the proposed change in angle for the canon is still within 90 deg up and 0 deg forward facing
         if (this.canon.rotation.x + angleChange > 0 && this.canon.rotation.x + angleChange < Math.PI / 2) {
             this.canon.rotateX(angleChange);
@@ -793,10 +808,10 @@ function Player(options) {
 
         //console.log("Player.addAngle()", this.canon.rotation.x);
 
-        this.getIndicator();
         this.bbox.update();
+        this.getIndicator();
 
-        this.checkTangent(Scene.getTerrain().objForHittest);
+        //this.checkTangent(Scene.getTerrain().objForHittest);
     };
 
 
@@ -804,16 +819,16 @@ function Player(options) {
      * rotates the player canon horizontally
      * @param rotationChange in radians
      */
-    this.addRotation = function(rotationChange) {
+    this.addRotation = function (rotationChange) {
         // rotate the whole player object, not just the canon
         this.obj.rotateOnAxis(new THREE.Vector3(0, 1, 0), rotationChange);
 
         //console.log("Player.addRotation", this.obj.rotation.y);
 
-        this.getIndicator();
         this.bbox.update();
+        this.getIndicator();
 
-        this.checkTangent(Scene.getTerrain().objForHittest);
+        //this.checkTangent(Scene.getTerrain().objForHittest);
     };
 
 
@@ -842,8 +857,8 @@ function Player(options) {
         rotationV = rotationV.extractRotation(this.canon.matrix);
 
         // fix the rotation offset of the canon rail
-        var rotationOffset = new THREE.Matrix4().makeRotationX(-Math.PI/4);
-        
+        var rotationOffset = new THREE.Matrix4().makeRotationX(-Math.PI / 4);
+
         // calculate the final firing position
         var direction = new THREE.Vector3(0, 1, 1);
         // fix the vertical offset
@@ -855,15 +870,17 @@ function Player(options) {
 
 
         // dev visualization only:
-        while (this.indicator.children.length > 5) {
+        while (this.indicator.children.length > 0) {
             this.indicator.children.shift();
         }
 
         var g = new THREE.Geometry();
         g.vertices.push(this.position);
         g.vertices.push(this.position.clone().add(direction.clone().multiplyScalar(1 + forceIndicator * 5)));
-        var m = new THREE.LineBasicMaterial({ color: "rgb(" + Math.round(forceIndicator * 255) + ", 0, 0)" });
+        var m = new THREE.LineBasicMaterial({color: "rgb(" + Math.round(forceIndicator * 255) + ", 0, 0)"});
         this.indicator.add(new THREE.Line(g, m));
+
+        this.indicator.updateMatrix();
 
         return direction;
     };
@@ -1061,7 +1078,7 @@ var Scene = (function () {
 
 
         // TMP debug helper
-        scene.add(new THREE.AxisHelper(100));
+        //scene.add(new THREE.AxisHelper(100));
 
         projectiles = [];
 
@@ -1088,7 +1105,6 @@ var Scene = (function () {
 
         // DEBUG / visual helper
         scene.add(player.indicator);
-        scene.add(player.bbox);
     };
 
 

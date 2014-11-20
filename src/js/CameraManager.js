@@ -41,7 +41,7 @@ var CameraManager = (function () {
     var controlsEnabled = false;
 
     // debug helper objects and flags
-    var debug = true,
+    var debug = false,
         arrowHelper,
         dollyHelper,
         dollyHorizontalHelper,

@@ -11,6 +11,10 @@ function HumanPlayer(options) {
 
     var that = this;
 
+    that.rotationStep = 1;
+    that.rotationStepMultiplier = 1.1;
+    that.rotationStepMax = 10;
+
     this.isHuman = true;
     this.controlsEnabled = false;
 
@@ -26,6 +30,7 @@ function HumanPlayer(options) {
         console.log("Player controls disabled");
     };
 
+
     function setupControls () {
         console.log("HumanPlayer.setupControls()");
         $(window).on("keydown", onKeyDown);
@@ -34,34 +39,34 @@ function HumanPlayer(options) {
 
 
     /**
-     * TODO improve rotating by adding additive rotation speed when key pressed continuously
+     *
      */
     function onKeyDown(e) {
         if (!that.controlsEnabled) {
             return false;
         }
 
-        var rotationStep = 5;
+        that.rotationStep = Math.min(that.rotationStepMax, that.rotationStep * that.rotationStepMultiplier);
 
         switch (e.keyCode) {
             // arrow up
             case 40:
-                that.addAngle(rotationStep * (Math.PI / 180));
+                that.addAngle(that.rotationStep * (Math.PI / 180));
                 break;
 
             // arrow down
             case 38:
-                that.addAngle(-rotationStep * (Math.PI / 180));
+                that.addAngle(-that.rotationStep * (Math.PI / 180));
                 break;
 
             // arrow left
             case 39:
-                that.addRotation(-rotationStep * (Math.PI / 180));
+                that.addRotation(-that.rotationStep * (Math.PI / 180));
                 break;
 
             // arrow right
             case 37:
-                that.addRotation(rotationStep * (Math.PI / 180));
+                that.addRotation(that.rotationStep * (Math.PI / 180));
                 break;
 
             // space bar
@@ -76,10 +81,14 @@ function HumanPlayer(options) {
         }
     }
 
+
     function onKeyUp(e) {
         if (!that.controlsEnabled) {
             return false;
         }
+
+        // reset rotationStep back to 1
+        that.rotationStep = 1;
 
         if (e.keyCode == "32") {
             // spacebar was released

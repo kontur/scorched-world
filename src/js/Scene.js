@@ -44,7 +44,7 @@ var Scene = (function () {
 
 
         // TMP debug helper
-        scene.add(new THREE.AxisHelper(100));
+        //scene.add(new THREE.AxisHelper(100));
 
         projectiles = [];
 
@@ -71,7 +71,6 @@ var Scene = (function () {
 
         // DEBUG / visual helper
         scene.add(player.indicator);
-        scene.add(player.bbox);
     };
 
 

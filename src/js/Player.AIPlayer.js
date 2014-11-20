@@ -60,9 +60,6 @@ function AIPlayer(options) {
     this.animateTo = function (rotationH, rotationV) {
         this.canon.rotation.x = rotationV;
         this.obj.rotation.y = rotationH;
-
-        this.bbox.update();
-
         this.checkTangent(Scene.getTerrain().objForHittest);
     };
 

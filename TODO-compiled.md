@@ -22,21 +22,16 @@
 -  **TODO** `(line 7)`  player AI difficulty
 -  **TODO** `(line 8)`  automated aiming and firing animations
 -  **TODO** `(line 59)`  make this an actual animation, not just a plain set operation
--  **TODO** `(line 70)`  take the distance from this player to target, then cycle through provious shots, take the one with closest distance
--  **TODO** `(line 78)`  factor of randomness based on a) difficulty and b) percentual distance to target of previous shot
--  **TODO** `(line 100)`  even without a reference shot, the first shot should, depending on difficulty level, still somewhat
--  **TODO** `(line 107)`  clamp values to allowed orientations and forces - vertify these work as intended
-
-## src/js/Player.Human.js
-
--  **TODO** `(line 37)`  improve rotating by adding additive rotation speed when key pressed continuously
+-  **TODO** `(line 67)`  take the distance from this player to target, then cycle through provious shots, take the one with closest distance
+-  **TODO** `(line 75)`  factor of randomness based on a) difficulty and b) percentual distance to target of previous shot
+-  **TODO** `(line 97)`  even without a reference shot, the first shot should, depending on difficulty level, still somewhat
+-  **TODO** `(line 104)`  clamp values to allowed orientations and forces - vertify these work as intended
 
 ## src/js/Player.js
 
--  **TODO** `(line 24)`  adjust fireForceFactor to ensure the other player is always hitable
--  **TODO** `(line 84)`  prevent multiple simultaneous projectiles in the air
--  **TODO** `(line 85)`  projectile mass has no effect
--  **TODO** `(line 219)`  visually signify player having lost
+-  **TODO** `(line 93)`  prevent multiple simultaneous projectiles in the air
+-  **TODO** `(line 94)`  projectile mass has no effect
+-  **TODO** `(line 230)`  visually signify player having lost
 
 ## src/js/Projectile.js
 
@@ -47,9 +42,9 @@
 
 ## src/js/Scene.js
 
--  **NOTE** `(line 100)`  this just emulates the {} hit object, but does not correspond to a similar object as if
--  **TODO** `(line 118)`  low priority: instead of just using the projectile position, aquire a definite terrain
--  **TODO** `(line 126)`  BAD practise to have this event trigger on window :/
+-  **NOTE** `(line 99)`  this just emulates the {} hit object, but does not correspond to a similar object as if
+-  **TODO** `(line 117)`  low priority: instead of just using the projectile position, aquire a definite terrain
+-  **TODO** `(line 125)`  BAD practise to have this event trigger on window :/
 
 ## src/js/Terrain.js
 
