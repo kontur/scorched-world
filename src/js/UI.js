@@ -6,6 +6,8 @@ var UI = (function () {
     var playerColors = [0x00ff00, 0xff0000, 0xffff00, 0x00ffff];
     var playerRowTemplate = Handlebars.compile($("#playerRowTemplate").html());
     var $playersTable = $("#start table");
+    var maxPlayers = 4;
+
 
     var init = function () {
         $(window).on("resize", onResize);
@@ -13,6 +15,8 @@ var UI = (function () {
         $("#ui-start-game").on("click", startGame);
         $("#menus [name=numPlayers]").on("change", startUpdatePlayers);
         showMenu("#start");
+
+        Game.init(maxPlayers);
     };
 
 
@@ -31,7 +35,17 @@ var UI = (function () {
     }
 
 
-    function startGame() {
+    /**
+     * start off the game with the entered players
+     */
+    function startGame(e) {
+        console.log("UI.startGame()");
+
+        if ($playersTable.children(".playerRow").length < 1) {
+            alert("Select a number of players");
+            return false;
+        }
+
         var players = [];
 
         $playersTable.children(".playerRow").each(function () {
@@ -49,28 +63,18 @@ var UI = (function () {
             }
         });
 
-
-        // lazy dev mode
-        while (players.length < 4) {
-            players.push(new HumanPlayer({ color: playerColors[players.length], name: "Foobar" }));
-            hideMenu();
-        }
-
-
-        //new HumanPlayer({ color: 0xff0000, name: "Barfoo" })
-        //new AIPlayer({ color: 0xff00ff, name: "Foobar" }),
-        //new AIPlayer({ color: 0xff6600, difficulty: 0, name: "Robert the Robot" })
-
-        console.log(players);
-
         hideMenu();
-        Game.start(players);
+        Game.addPlayers(players);
+        Game.start();
     }
 
 
+    /**
+     * check for valid player name etc input
+     *
+     * @param e
+     */
     function startUpdatePlayers(e) {
-        console.log($(e.target).val());
-
         var numPlayers = $(e.target).val();
 
         while ($playersTable.children(".playerRow").length < numPlayers) {

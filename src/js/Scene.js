@@ -11,6 +11,8 @@ var Scene = (function () {
 
     /**
      * entry point for setting up the scene and renderer
+     *
+     * @param numPlayers int number of player positions to generate (max players)
      */
     var init = function (numPlayers) {
         console.log("Scene.init()");
@@ -54,8 +56,6 @@ var Scene = (function () {
      */
     var start = function () {
         render();
-        CameraManager.setTo(new THREE.Vector3(-30, 15, 0), new THREE.Vector3(0, 0, 0));
-        CameraManager.animateTo(new THREE.Vector3(-30, 15, 0), new THREE.Vector3(0, 0, 0), 0, CameraManager.getCameraDefaults().maxV);
     };
 
 

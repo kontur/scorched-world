@@ -65,17 +65,17 @@ var CameraManager = (function () {
         cameraDolly.add(cameraDollyHorizontal);
 
         setupCameraControls();
-
+        animateTo(new THREE.Vector3(0, 50, 0), new THREE.Vector3(0, 0, 0), Math.PI / 4, Math.PI / 4);
 
         // TODO refine this implementation; for now, this has too many unexpected odd camera truns in various edge cases
         // like for example when the projectile flies past the camera too close the camera spins too fast
 
         // listen for events informing of a projectile mid-air so the camera can follow it in its flight path
-        $(window).on("PROJECTILE_MOVE", function (e, data) {
-            //targetLookAt = data.position;
-            //targetRotationH = 0;
-            //targetRotationV = 0;
-        });
+        //$(window).on("PROJECTILE_MOVE", function (e, data) {
+        //    targetLookAt = data.position;
+        //    targetRotationH = 0;
+        //    targetRotationV = 0;
+        //});
 
         // init this debugHelper either way
         debugHelper = new THREE.Object3D();
@@ -353,25 +353,26 @@ var Game = (function () {
     var currentTurn; // int from 0 - players.length identifying the current players turn
 
 
-    /**
-     * Start a new game with given players
-     *
-     * @param _players array of player objects
-     */
-    var start = function (_players) {
-        players = _players;
-
-        Scene.init(_players.length);
+    var init = function (maxPlayers) {
+        Scene.init(maxPlayers);
         Scene.start();
+        CameraManager.disableControls();
+    };
+
+
+    var addPlayers = function (_players) {
+        players = _players;
 
         for (p in players) {
             players[p].init();
             players[p].setPosition(Scene.getTerrain().playerPositions[p]);
             Scene.addPlayer(players[p]);
         }
+    };
 
+
+    var start = function () {
         currentTurn = 0;
-
         setTimeout(nextTurn, 1500);
     };
 
@@ -433,6 +434,7 @@ var Game = (function () {
             setTimeout(nextTurn, 1500);
         } else {
             console.log("WIN FOR PLAYER ", alive[0]);
+            alert("WIN FOR PLAYER ", alive[0]);
         }
     }
 
@@ -454,6 +456,8 @@ var Game = (function () {
 
 
     return {
+        init: init,
+        addPlayers: addPlayers,
         start: start,
         reset: start,
         getPlayers: function () {
@@ -1024,6 +1028,8 @@ var Scene = (function () {
 
     /**
      * entry point for setting up the scene and renderer
+     *
+     * @param numPlayers int number of player positions to generate (max players)
      */
     var init = function (numPlayers) {
         console.log("Scene.init()");
@@ -1067,8 +1073,6 @@ var Scene = (function () {
      */
     var start = function () {
         render();
-        CameraManager.setTo(new THREE.Vector3(-30, 15, 0), new THREE.Vector3(0, 0, 0));
-        CameraManager.animateTo(new THREE.Vector3(-30, 15, 0), new THREE.Vector3(0, 0, 0), 0, CameraManager.getCameraDefaults().maxV);
     };
 
 
@@ -1349,6 +1353,8 @@ var UI = (function () {
     var playerColors = [0x00ff00, 0xff0000, 0xffff00, 0x00ffff];
     var playerRowTemplate = Handlebars.compile($("#playerRowTemplate").html());
     var $playersTable = $("#start table");
+    var maxPlayers = 4;
+
 
     var init = function () {
         $(window).on("resize", onResize);
@@ -1356,6 +1362,8 @@ var UI = (function () {
         $("#ui-start-game").on("click", startGame);
         $("#menus [name=numPlayers]").on("change", startUpdatePlayers);
         showMenu("#start");
+
+        Game.init(maxPlayers);
     };
 
 
@@ -1374,7 +1382,17 @@ var UI = (function () {
     }
 
 
-    function startGame() {
+    /**
+     * start off the game with the entered players
+     */
+    function startGame(e) {
+        console.log("UI.startGame()");
+
+        if ($playersTable.children(".playerRow").length < 1) {
+            alert("Select a number of players");
+            return false;
+        }
+
         var players = [];
 
         $playersTable.children(".playerRow").each(function () {
@@ -1392,28 +1410,18 @@ var UI = (function () {
             }
         });
 
-
-        // lazy dev mode
-        while (players.length < 4) {
-            players.push(new HumanPlayer({ color: playerColors[players.length], name: "Foobar" }));
-            hideMenu();
-        }
-
-
-        //new HumanPlayer({ color: 0xff0000, name: "Barfoo" })
-        //new AIPlayer({ color: 0xff00ff, name: "Foobar" }),
-        //new AIPlayer({ color: 0xff6600, difficulty: 0, name: "Robert the Robot" })
-
-        console.log(players);
-
         hideMenu();
-        Game.start(players);
+        Game.addPlayers(players);
+        Game.start();
     }
 
 
+    /**
+     * check for valid player name etc input
+     *
+     * @param e
+     */
     function startUpdatePlayers(e) {
-        console.log($(e.target).val());
-
         var numPlayers = $(e.target).val();
 
         while ($playersTable.children(".playerRow").length < numPlayers) {
@@ -1508,8 +1516,5 @@ var Utils = (function () {
     };
 }());
 $(function() {
-
     UI.init();
-    UI.startGame();
-
 });

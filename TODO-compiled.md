@@ -12,9 +12,9 @@
 
 ## src/js/Game.js
 
--  **TODO** `(line 43)`  instead of x,z -15 those should be behind the player FACING THE DIRECTION of other players (or previous
--  **TODO** `(line 49)`  eventually store each player's own last camera rotation and set it here when their turn starts
--  **TODO** `(line 58)`  plenty of AI and animation logic
+-  **TODO** `(line 44)`  instead of x,z -15 those should be behind the player FACING THE DIRECTION of other players (or previous
+-  **TODO** `(line 50)`  eventually store each player's own last camera rotation and set it here when their turn starts
+-  **TODO** `(line 59)`  plenty of AI and animation logic
 
 ## src/js/Player.AIPlayer.js
 

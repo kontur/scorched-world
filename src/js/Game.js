@@ -7,25 +7,26 @@ var Game = (function () {
     var currentTurn; // int from 0 - players.length identifying the current players turn
 
 
-    /**
-     * Start a new game with given players
-     *
-     * @param _players array of player objects
-     */
-    var start = function (_players) {
-        players = _players;
-
-        Scene.init(_players.length);
+    var init = function (maxPlayers) {
+        Scene.init(maxPlayers);
         Scene.start();
+        CameraManager.disableControls();
+    };
+
+
+    var addPlayers = function (_players) {
+        players = _players;
 
         for (p in players) {
             players[p].init();
             players[p].setPosition(Scene.getTerrain().playerPositions[p]);
             Scene.addPlayer(players[p]);
         }
+    };
 
+
+    var start = function () {
         currentTurn = 0;
-
         setTimeout(nextTurn, 1500);
     };
 
@@ -87,6 +88,7 @@ var Game = (function () {
             setTimeout(nextTurn, 1500);
         } else {
             console.log("WIN FOR PLAYER ", alive[0]);
+            alert("WIN FOR PLAYER ", alive[0]);
         }
     }
 
@@ -108,6 +110,8 @@ var Game = (function () {
 
 
     return {
+        init: init,
+        addPlayers: addPlayers,
         start: start,
         reset: start,
         getPlayers: function () {
