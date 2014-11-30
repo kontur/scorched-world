@@ -6,6 +6,7 @@
 ## Important playability improvements
 * when there is only AI players left alive, the UI should probably suggest a rematch
 * differentiate projectile damage to not be just a plain binary 100 on hit or 0 on miss
+* refactor some hit test and physics calculations to get better in-flight projectile performance  
 
 ### Improvement from crude initial implementations
 * add different types of projectiles
