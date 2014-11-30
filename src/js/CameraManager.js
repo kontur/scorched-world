@@ -75,15 +75,10 @@ var CameraManager = (function () {
         disableCameraControl();
         animateTo(new THREE.Vector3(0, 50, 0), new THREE.Vector3(0, 0, 0), 0, 0);
 
-        // TODO refine this implementation; for now, this has too many unexpected odd camera truns in various edge cases
-        // like for example when the projectile flies past the camera too close the camera spins too fast
-
         // listen for events informing of a projectile mid-air so the camera can follow it in its flight path
-        //$(window).on("PROJECTILE_MOVE", function (e, data) {
-        //    targetLookAt = data.position;
-        //    targetRotationH = 0;
-        //    targetRotationV = 0;
-        //});
+        $(window).on("PROJECTILE_MOVE", function (e, data) {
+            setTo(cameraDolly.position, data.position);
+        });
 
         // init this debugHelper either way
         debugHelper = new THREE.Object3D();

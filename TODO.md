@@ -1,9 +1,7 @@
 # TODOS (manually compiled list - see TODO-compiled.md for remarks left in the code for implementations that need improvement)
 
 ## Top level to-do's
-* basic UI for player controls
 * working opponent AI
-* working logic for detecting a win in the game
 
 ## Important playability improvements
 -
@@ -29,4 +27,4 @@
 * App packaging for playing on mobile devices
 
 ## Bugs
--
+- sometimes even a shot straight up that clearly should be a hit is not registered as such

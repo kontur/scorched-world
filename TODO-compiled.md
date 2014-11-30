@@ -5,10 +5,9 @@
 
 -  **TODO** `(line 4)`  logic for not allowing the camera to penetrate the terrain, i.e. calculate the actual distance between
 -  **TODO** `(line 7)`  keep minimum distance to lookat, for example when a projectile fires past the camera, it rotates too fast
--  **TODO** `(line 78)`  refine this implementation; for now, this has too many unexpected odd camera truns in various edge cases
--  **TODO** `(line 131)`  gradual and tweened rotation changes
--  **TODO** `(line 182)`  replace 0.1 with dynamic accelarerated / eased value
--  **TODO** `(line 300)`  speed up / ease in out
+-  **TODO** `(line 126)`  gradual and tweened rotation changes
+-  **TODO** `(line 177)`  replace 0.1 with dynamic accelarerated / eased value
+-  **TODO** `(line 295)`  speed up / ease in out
 
 ## src/js/Game.js
 
