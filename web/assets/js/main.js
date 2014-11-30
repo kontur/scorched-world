@@ -65,6 +65,7 @@ var CameraManager = (function () {
         cameraDolly.add(cameraDollyHorizontal);
 
         setupCameraControls();
+        disableCameraControl();
         animateTo(new THREE.Vector3(0, 50, 0), new THREE.Vector3(0, 0, 0), 0, 0);
 
         // TODO refine this implementation; for now, this has too many unexpected odd camera truns in various edge cases
@@ -253,30 +254,32 @@ var CameraManager = (function () {
 
 
     function onKeyDown(e) {
-        var rotationSpeed = 0.051;
-        switch (e.keyCode) {
-            // d
-            case 68:
-                rotate("x", -rotationSpeed);
-                break;
+        if (controlsEnabled) {
+            var rotationSpeed = 0.051;
+            switch (e.keyCode) {
+                // d
+                case 68:
+                    rotate("x", -rotationSpeed);
+                    break;
 
-            // a
-            case 65:
-                rotate("x", rotationSpeed);
-                break;
+                // a
+                case 65:
+                    rotate("x", rotationSpeed);
+                    break;
 
-            // w
-            case 87:
-                rotate("y", -rotationSpeed);
-                break;
+                // w
+                case 87:
+                    rotate("y", -rotationSpeed);
+                    break;
 
-            // s
-            case 83:
-                rotate("y", rotationSpeed);
-                break;
+                // s
+                case 83:
+                    rotate("y", rotationSpeed);
+                    break;
 
-            default:
-                break;
+                default:
+                    break;
+            }
         }
     }
 
