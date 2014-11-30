@@ -4,7 +4,7 @@
 * working opponent AI
 
 ## Important playability improvements
--
+* when there is only AI players left alive, the UI should probably suggest a rematch
 
 ### Improvement from crude initial implementations
 * camera control optionally with mouse

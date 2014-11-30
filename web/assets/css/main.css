@@ -81,12 +81,30 @@ body {
   width: 100%;
   z-index: 2;
 }
+#heading em {
+  font-size: 0.5em;
+  display: block;
+}
+#heading a {
+  color: inherit;
+}
 #instructions {
   position: absolute;
   bottom: 1em;
   width: 100%;
   text-align: center;
   z-index: 2;
+}
+#instructions p {
+  max-width: 40em;
+  font-size: 10px;
+  text-align: center;
+  margin: 2em auto 0;
+  color: #333;
+}
+#instructions p a {
+  color: inherit;
+  text-decoration: underline;
 }
 #ui {
   left: 0;
