@@ -31,7 +31,6 @@ function Player(options) {
 
 
     this.init = function () {
-        console.log("Player.init()", this.options.color);
 
         this.id = this.options.id;
         this.name = this.options.name;
@@ -100,7 +99,7 @@ function Player(options) {
      * TODO projectile mass has no effect
      */
     this.fire = function (force) {
-        console.log("Player.fire()", force);
+        //console.log("Player.fire()", force);
 
         var direction = this.getIndicator().multiplyScalar(force).multiplyScalar(this.fireForceFactor); //new THREE.Vector3(0.5, 0.5, 0);
         var mass = 0.151;
@@ -110,7 +109,8 @@ function Player(options) {
         var projectile = new Projectile({
             direction: direction,
             mass: mass,
-            player: this
+            player: this,
+            color: options.color
         });
 
         this.cameraPosition = CameraManager.getLocation();
@@ -224,7 +224,6 @@ function Player(options) {
      * this player got hit
      */
     this.registerHit = function () {
-        console.log("Player.registerHit");
         this.life -= 100;
 
         if (this.life <= 0) {
@@ -239,7 +238,7 @@ function Player(options) {
      * TODO visually signify player having lost
      */
     this.terminate = function () {
-        console.log("Player exploded");
+        //console.log("Player exploded. Bäm!");
     };
 }
 

@@ -18,8 +18,6 @@ function AIPlayer(options) {
         var that = this;
         setTimeout(function () {
 
-            //console.log("shots", shots);
-
             var closestDistance = null;
             var closestShot = null;
             if (shots.length) {
@@ -79,8 +77,8 @@ function AIPlayer(options) {
             //console.log("player to hit: ", closestOtherPlayerToBestHit);
 
             var distanceToPlayer = this.position.distanceTo(closestOtherPlayerToBestHit.position);
-            console.log("distance to next player", distanceToPlayer);
-            console.log("---RATIO shot distance to distance to player", shot.distance / distanceToPlayer);
+            //console.log("distance to next player", distanceToPlayer);
+            //console.log("---RATIO shot distance to distance to player", shot.distance / distanceToPlayer);
 
             var factor = Math.max(shot.distance / distanceToPlayer, 0.01);
 

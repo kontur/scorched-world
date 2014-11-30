@@ -35,11 +35,10 @@ var Game = (function () {
      * Initiate the next turn
      */
     function nextTurn() {
-        console.log("----------------------------------");
-        console.log("Game.nextTurn()", currentTurn, players[currentTurn].isHuman);
+        //console.log("----------------------------------");
+        //console.log("Game.nextTurn()", currentTurn, players[currentTurn].isHuman);
 
         if (players[currentTurn].life <= 0) {
-            console.log("skip this player", players[currentTurn].name);
             updateCurrentTurn();
             nextTurn();
             return;
@@ -73,7 +72,6 @@ var Game = (function () {
      * continues
      */
     function updateDamage() {
-        console.log("Game.updateDamage()");
         $(window).off("PROJECTILE_IMPACT", updateDamage);
 
         // check and collect the players that are alive still

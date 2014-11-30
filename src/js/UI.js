@@ -34,7 +34,6 @@ var UI = (function () {
      * start off the game with the entered players
      */
     var startGame = function (e) {
-        console.log("UI.startGame()");
 
         if ($playersTable.children(".playerRow").length < 1) {
             alert("Select a number of players");

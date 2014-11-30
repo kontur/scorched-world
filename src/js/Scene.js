@@ -15,8 +15,6 @@ var Scene = (function () {
      * @param numPlayers int number of player positions to generate (max players)
      */
     var init = function (numPlayers) {
-        console.log("Scene.init()");
-
         scene = new THREE.Scene();
 
         CameraManager.init();

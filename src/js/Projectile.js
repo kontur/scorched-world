@@ -9,13 +9,14 @@ var Projectile = function (options) {
     var defaults = {
         mass: 0.1,
         direction: new THREE.Vector3(0, 0, 0),
-        player: null
+        player: null,
+        color: 0xff00ff
     };
 
     var options = $.extend(defaults, options);
 
     var geometry = new THREE.SphereGeometry(0.25, 4, 4);
-    var material = new THREE.MeshBasicMaterial({ color: 0xff00ff });
+    var material = new THREE.MeshBasicMaterial({ color: options.color });
     var mesh = new THREE.Mesh(geometry, material);
 
     var offsetY = 1;
@@ -94,7 +95,7 @@ var Projectile = function (options) {
      * @returns {boolean|THREE.Vector3}
      */
     this.getPlaneCollision = function () {
-        console.log("Projectile.getPlaneCollision", lastResult);
+        //console.log("Projectile.getPlaneCollision", lastResult);
         return lastResult ? lastResult[0].point : false;
     };
 

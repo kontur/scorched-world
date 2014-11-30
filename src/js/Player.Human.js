@@ -4,7 +4,6 @@
  * @constructor new HumanPlayer()
  */
 function HumanPlayer(options) {
-    console.log("HumanPlayer()");
 
     Player.call(this, options);
     setupControls();
@@ -21,18 +20,15 @@ function HumanPlayer(options) {
 
     this.enableControls = function () {
         this.controlsEnabled = true;
-        console.log("Player controls enabled");
     };
 
 
     this.disableControls = function () {
         this.controlsEnabled = false;
-        console.log("Player controls disabled");
     };
 
 
     function setupControls () {
-        console.log("HumanPlayer.setupControls()");
         $(window).on("keydown", onKeyDown);
         $(window).on("keyup", onKeyUp);
     }

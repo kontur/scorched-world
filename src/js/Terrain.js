@@ -139,7 +139,7 @@ Terrain = function() {
      * @returns {{position: THREE.Vector3, distance: number}}
      */
     this.closestOtherPlayer = function (position, excludePosition) {
-        console.log("Terrain.closestOtherPlayer()", position, excludePosition);
+        //console.log("Terrain.closestOtherPlayer()", position, excludePosition);
         var closest = null;
         var closestPos = null;
         for (pos in this.playerPositions) {

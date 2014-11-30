@@ -379,11 +379,10 @@ var Game = (function () {
      * Initiate the next turn
      */
     function nextTurn() {
-        console.log("----------------------------------");
-        console.log("Game.nextTurn()", currentTurn, players[currentTurn].isHuman);
+        //console.log("----------------------------------");
+        //console.log("Game.nextTurn()", currentTurn, players[currentTurn].isHuman);
 
         if (players[currentTurn].life <= 0) {
-            console.log("skip this player", players[currentTurn].name);
             updateCurrentTurn();
             nextTurn();
             return;
@@ -417,7 +416,6 @@ var Game = (function () {
      * continues
      */
     function updateDamage() {
-        console.log("Game.updateDamage()");
         $(window).off("PROJECTILE_IMPACT", updateDamage);
 
         // check and collect the players that are alive still
@@ -483,8 +481,6 @@ function AIPlayer(options) {
         var that = this;
         setTimeout(function () {
 
-            //console.log("shots", shots);
-
             var closestDistance = null;
             var closestShot = null;
             if (shots.length) {
@@ -544,8 +540,8 @@ function AIPlayer(options) {
             //console.log("player to hit: ", closestOtherPlayerToBestHit);
 
             var distanceToPlayer = this.position.distanceTo(closestOtherPlayerToBestHit.position);
-            console.log("distance to next player", distanceToPlayer);
-            console.log("---RATIO shot distance to distance to player", shot.distance / distanceToPlayer);
+            //console.log("distance to next player", distanceToPlayer);
+            //console.log("---RATIO shot distance to distance to player", shot.distance / distanceToPlayer);
 
             var factor = Math.max(shot.distance / distanceToPlayer, 0.01);
 
@@ -583,7 +579,6 @@ function AIPlayer(options) {
 AIPlayer.prototype = new Player();
 AIPlayer.constructor = AIPlayer;
 function HumanPlayer(options) {
-    console.log("HumanPlayer()");
 
     Player.call(this, options);
     setupControls();
@@ -600,18 +595,15 @@ function HumanPlayer(options) {
 
     this.enableControls = function () {
         this.controlsEnabled = true;
-        console.log("Player controls enabled");
     };
 
 
     this.disableControls = function () {
         this.controlsEnabled = false;
-        console.log("Player controls disabled");
     };
 
 
     function setupControls () {
-        console.log("HumanPlayer.setupControls()");
         $(window).on("keydown", onKeyDown);
         $(window).on("keyup", onKeyUp);
     }
@@ -722,7 +714,6 @@ function Player(options) {
 
 
     this.init = function () {
-        console.log("Player.init()", this.options.color);
 
         this.id = this.options.id;
         this.name = this.options.name;
@@ -791,7 +782,7 @@ function Player(options) {
      * TODO projectile mass has no effect
      */
     this.fire = function (force) {
-        console.log("Player.fire()", force);
+        //console.log("Player.fire()", force);
 
         var direction = this.getIndicator().multiplyScalar(force).multiplyScalar(this.fireForceFactor); //new THREE.Vector3(0.5, 0.5, 0);
         var mass = 0.151;
@@ -801,7 +792,8 @@ function Player(options) {
         var projectile = new Projectile({
             direction: direction,
             mass: mass,
-            player: this
+            player: this,
+            color: options.color
         });
 
         this.cameraPosition = CameraManager.getLocation();
@@ -915,7 +907,6 @@ function Player(options) {
      * this player got hit
      */
     this.registerHit = function () {
-        console.log("Player.registerHit");
         this.life -= 100;
 
         if (this.life <= 0) {
@@ -930,7 +921,7 @@ function Player(options) {
      * TODO visually signify player having lost
      */
     this.terminate = function () {
-        console.log("Player exploded");
+        //console.log("Player exploded. Bäm!");
     };
 }
 
@@ -942,13 +933,14 @@ var Projectile = function (options) {
     var defaults = {
         mass: 0.1,
         direction: new THREE.Vector3(0, 0, 0),
-        player: null
+        player: null,
+        color: 0xff00ff
     };
 
     var options = $.extend(defaults, options);
 
     var geometry = new THREE.SphereGeometry(0.25, 4, 4);
-    var material = new THREE.MeshBasicMaterial({ color: 0xff00ff });
+    var material = new THREE.MeshBasicMaterial({ color: options.color });
     var mesh = new THREE.Mesh(geometry, material);
 
     var offsetY = 1;
@@ -1027,7 +1019,7 @@ var Projectile = function (options) {
      * @returns {boolean|THREE.Vector3}
      */
     this.getPlaneCollision = function () {
-        console.log("Projectile.getPlaneCollision", lastResult);
+        //console.log("Projectile.getPlaneCollision", lastResult);
         return lastResult ? lastResult[0].point : false;
     };
 
@@ -1065,8 +1057,6 @@ var Scene = (function () {
      * @param numPlayers int number of player positions to generate (max players)
      */
     var init = function (numPlayers) {
-        console.log("Scene.init()");
-
         scene = new THREE.Scene();
 
         CameraManager.init();
@@ -1341,7 +1331,7 @@ Terrain = function() {
      * @returns {{position: THREE.Vector3, distance: number}}
      */
     this.closestOtherPlayer = function (position, excludePosition) {
-        console.log("Terrain.closestOtherPlayer()", position, excludePosition);
+        //console.log("Terrain.closestOtherPlayer()", position, excludePosition);
         var closest = null;
         var closestPos = null;
         for (pos in this.playerPositions) {
@@ -1413,7 +1403,6 @@ var UI = (function () {
      * start off the game with the entered players
      */
     var startGame = function (e) {
-        console.log("UI.startGame()");
 
         if ($playersTable.children(".playerRow").length < 1) {
             alert("Select a number of players");
