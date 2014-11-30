@@ -1151,9 +1151,9 @@ var Scene = (function () {
                         // NOTE this just emulates the {} hit object, but does not correspond to a similar object as if
                         // returned from raycaster.intersectObject; could use the hit THREE.Vector3 and cast a ray from
                         // y = 100 down to get the actual hit (on the player object)
-                        $(window).trigger("PROJECTILE_IMPACT", { point: playerHit });
                         players[player].registerHit();
                         terrain.showImpact(playerHit, 0xff0000);
+                        $(window).trigger("PROJECTILE_IMPACT", { point: playerHit });
 
                         break;
                     }
