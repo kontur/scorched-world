@@ -1,6 +1,9 @@
 # Scorched World
 A simple Threejs / WebGL adaptation of the legendary round based artillery game Scorched Earth for DOS.
 
+# Play now
+You can play the current state of the game [online here](http://scorched-world.johannesneumeier.com/).
+
 ## About
 This adaptation is a learning exercise in using Threejs and WebGL rendering that takes considerable creative freedom. 
  It is by no means complete nor claiming as refined a game play experience as its name sake. This demo was developed by 
