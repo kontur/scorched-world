@@ -17,8 +17,13 @@ var UI = (function () {
     var init = function () {
         $(window).on("resize", onResize);
         onResize();
+
         $("#ui-start-game").on("click", startGame);
+        $("#ui-restart-game").on("click", function () {
+            window.location.reload();
+        });
         $("#menus [name=numPlayers]").on("change", startUpdatePlayers);
+
         showMenu("#start");
 
         Game.init(maxPlayers);
@@ -26,24 +31,9 @@ var UI = (function () {
 
 
     /**
-     * update the rendering size of the scene
-     */
-    function onResize() {
-        var w = window.innerWidth;
-        var h = window.innerHeight;
-
-        $("#gamecanvas").css("width", w + "px");
-        $("#gamecanvas").css("height", h + "px");
-
-        CameraManager.updateAspect(w / h);
-        Scene.setRendererSize(w, h);
-    }
-
-
-    /**
      * start off the game with the entered players
      */
-    function startGame(e) {
+    var startGame = function (e) {
         console.log("UI.startGame()");
 
         if ($playersTable.children(".playerRow").length < 1) {
@@ -57,12 +47,13 @@ var UI = (function () {
             var $this = $(this),
                 options = {
                     name: $this.find("input[name=playerName]").val(),
-                    color: playerColors[players.length]
+                    color: playerColors[players.length],
+                    id: players.length
                 },
                 p = null;
 
             if (!options.name) {
-                options.name = "Mr. Random";
+                options.name = "Player " + (players.length + 1);
             }
 
             if ($this.find("select").val() == "human") {
@@ -83,11 +74,33 @@ var UI = (function () {
         Game.addPlayers(players);
         Game.start();
         showHUD();
+    };
+
+
+    var showWin = function (playerObject) {
+        $("#winner").find("span").html(playerObject.name);
+        showMenu("#winner");
+    };
+
+    /**
+     * update the rendering size of the scene
+     */
+    function onResize() {
+        var w = window.innerWidth;
+        var h = window.innerHeight;
+
+        $("#gamecanvas").css("width", w + "px");
+        $("#gamecanvas").css("height", h + "px");
+
+        CameraManager.updateAspect(w / h);
+        Scene.setRendererSize(w, h);
     }
 
 
     function updatePlayerLife(e) {
-        console.log("UI.updatePlayerLife", e);
+        $("#player-" + e.currentTarget.id).css("border", "1px solid red")
+            .find(".player-life").animate({ "width": e.currentTarget.life })
+            .find("span").html(e.currentTarget.life);
     }
 
 
@@ -129,7 +142,8 @@ var UI = (function () {
 
     return {
         init: init,
-        startGame: startGame
+        startGame: startGame,
+        showWin: showWin
     };
 
 })();

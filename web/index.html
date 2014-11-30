@@ -29,7 +29,11 @@
                     </table>
                     <button id="ui-start-game" class="primary" disabled>Start game</button>
                 </div>
-                <div id="winner">The winner is <span class="winner-name"></span>!</div>
+                <div id="winner">
+                    <h2>Game over!</h2>
+                    The winner is <span class="winner-name"></span>!
+                    <button id="ui-restart-game" class="primary">Play another</button>
+                </div>
             </div>
             <div id="hud">
                 <div id="players">
@@ -56,7 +60,7 @@
 
 
         <script type="text/template" id="playerHUDTemplate">
-            <tr class="playerDisplay">
+            <tr class="playerDisplay" id="player-{{ id }}">
                 <td><div class="player-life" style="background-color: {{ color }};"><span>100</span></div></td>
                 <td><span style="color: {{ color }};">{{ name }}</span></td>
             </tr>

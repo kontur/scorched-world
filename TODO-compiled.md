@@ -12,9 +12,9 @@
 
 ## src/js/Game.js
 
--  **TODO** `(line 44)`  instead of x,z -15 those should be behind the player FACING THE DIRECTION of other players (or previous
--  **TODO** `(line 50)`  eventually store each player's own last camera rotation and set it here when their turn starts
--  **TODO** `(line 59)`  plenty of AI and animation logic
+-  **TODO** `(line 51)`  instead of x,z -15 those should be behind the player FACING THE DIRECTION of other players (or previous
+-  **TODO** `(line 57)`  eventually store each player's own last camera rotation and set it here when their turn starts
+-  **TODO** `(line 65)`  plenty of AI and animation logic
 
 ## src/js/Player.AIPlayer.js
 
@@ -29,9 +29,9 @@
 
 ## src/js/Player.js
 
--  **TODO** `(line 93)`  prevent multiple simultaneous projectiles in the air
--  **TODO** `(line 94)`  projectile mass has no effect
--  **TODO** `(line 232)`  visually signify player having lost
+-  **TODO** `(line 99)`  prevent multiple simultaneous projectiles in the air
+-  **TODO** `(line 100)`  projectile mass has no effect
+-  **TODO** `(line 239)`  visually signify player having lost
 
 ## src/js/Projectile.js
 

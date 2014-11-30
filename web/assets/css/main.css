@@ -100,36 +100,38 @@ body {
   background: rgba(255, 255, 255, 0.95);
   border: 3px solid #0db0d3;
   display: block;
-  height: 15em;
   padding: 2em;
+  position: relative;
   margin: 7em auto;
   width: 25em;
+  z-index: 9;
 }
 #ui #menus > div {
   display: none;
-}
-#ui #menus #start {
   text-align: center;
 }
-#ui #menus #start h2 {
+#ui #menus > div h2 {
   margin-bottom: 0.5em;
 }
-#ui #menus #start p {
+#ui #menus > div p {
   display: inline-block;
 }
-#ui #menus #start select {
+#ui #menus > div select {
   display: inline-block;
   border: 1px solid #867666;
   border-radius: 0;
   -webkit-border-radius: 0;
 }
-#ui #menus #start table {
+#ui #menus > div table {
   display: none;
   margin: 1em auto;
 }
 #ui #menus button.primary {
   display: block;
   margin: 1em auto;
+}
+#hud {
+  z-index: 3;
 }
 #players {
   position: absolute;

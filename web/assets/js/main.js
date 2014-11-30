@@ -384,6 +384,13 @@ var Game = (function () {
         console.log("----------------------------------");
         console.log("Game.nextTurn()", currentTurn, players[currentTurn].isHuman);
 
+        if (players[currentTurn].life <= 0) {
+            console.log("skip this player", players[currentTurn].name);
+            updateCurrentTurn();
+            nextTurn();
+            return;
+        }
+
         $(window).on("PROJECTILE_IMPACT", updateDamage);
         var pos = players[currentTurn].position.clone();
 
@@ -395,7 +402,6 @@ var Game = (function () {
 
         // TODO eventually store each player's own last camera rotation and set it here when their turn starts
         CameraManager.animateTo(pos, players[currentTurn].position, 0, CameraManager.getCameraDefaults().playerV);
-
 
         // When the player is a human, hand over controls until they have fired otherwise make AI player fire automatically
         if (players[currentTurn].isHuman) {
@@ -416,8 +422,6 @@ var Game = (function () {
         console.log("Game.updateDamage()");
         $(window).off("PROJECTILE_IMPACT", updateDamage);
 
-        players[currentTurn].registerHit();
-
         // check and collect the players that are alive still
         var alive = playersAlive();
 
@@ -428,15 +432,18 @@ var Game = (function () {
                 CameraManager.disableControls();
             }
 
-            currentTurn++;
-            if (currentTurn >= players.length) {
-                currentTurn = 0;
-            }
+            updateCurrentTurn();
 
             setTimeout(nextTurn, 1500);
         } else {
-            console.log("WIN FOR PLAYER ", alive[0]);
-            alert("WIN FOR PLAYER ", alive[0]);
+            UI.showWin(alive[0]);
+        }
+    }
+
+    function updateCurrentTurn() {
+        currentTurn++;
+        if (currentTurn >= players.length) {
+            currentTurn = 0;
         }
     }
 
@@ -712,10 +719,16 @@ function Player(options) {
     this.fireButtonTimeout = null;
 
     this.life = 100;
+    this.id = null;
+    this.name = null;
 
 
     this.init = function () {
         console.log("Player.init()", this.options.color);
+
+        this.id = this.options.id;
+        this.name = this.options.name;
+
         var geometry = new THREE.IcosahedronGeometry(1, 0);
         var material = new THREE.MeshPhongMaterial({
             ambient: 0xffffff,
@@ -904,6 +917,7 @@ function Player(options) {
      * this player got hit
      */
     this.registerHit = function () {
+        console.log("Player.registerHit");
         this.life -= 100;
 
         if (this.life <= 0) {
@@ -1384,8 +1398,13 @@ var UI = (function () {
     var init = function () {
         $(window).on("resize", onResize);
         onResize();
+
         $("#ui-start-game").on("click", startGame);
+        $("#ui-restart-game").on("click", function () {
+            window.location.reload();
+        });
         $("#menus [name=numPlayers]").on("change", startUpdatePlayers);
+
         showMenu("#start");
 
         Game.init(maxPlayers);
@@ -1393,24 +1412,9 @@ var UI = (function () {
 
 
     /**
-     * update the rendering size of the scene
-     */
-    function onResize() {
-        var w = window.innerWidth;
-        var h = window.innerHeight;
-
-        $("#gamecanvas").css("width", w + "px");
-        $("#gamecanvas").css("height", h + "px");
-
-        CameraManager.updateAspect(w / h);
-        Scene.setRendererSize(w, h);
-    }
-
-
-    /**
      * start off the game with the entered players
      */
-    function startGame(e) {
+    var startGame = function (e) {
         console.log("UI.startGame()");
 
         if ($playersTable.children(".playerRow").length < 1) {
@@ -1424,12 +1428,13 @@ var UI = (function () {
             var $this = $(this),
                 options = {
                     name: $this.find("input[name=playerName]").val(),
-                    color: playerColors[players.length]
+                    color: playerColors[players.length],
+                    id: players.length
                 },
                 p = null;
 
             if (!options.name) {
-                options.name = "Mr. Random";
+                options.name = "Player " + (players.length + 1);
             }
 
             if ($this.find("select").val() == "human") {
@@ -1450,11 +1455,33 @@ var UI = (function () {
         Game.addPlayers(players);
         Game.start();
         showHUD();
+    };
+
+
+    var showWin = function (playerObject) {
+        $("#winner").find("span").html(playerObject.name);
+        showMenu("#winner");
+    };
+
+    /**
+     * update the rendering size of the scene
+     */
+    function onResize() {
+        var w = window.innerWidth;
+        var h = window.innerHeight;
+
+        $("#gamecanvas").css("width", w + "px");
+        $("#gamecanvas").css("height", h + "px");
+
+        CameraManager.updateAspect(w / h);
+        Scene.setRendererSize(w, h);
     }
 
 
     function updatePlayerLife(e) {
-        console.log("UI.updatePlayerLife", e);
+        $("#player-" + e.currentTarget.id).css("border", "1px solid red")
+            .find(".player-life").animate({ "width": e.currentTarget.life })
+            .find("span").html(e.currentTarget.life);
     }
 
 
@@ -1496,7 +1523,8 @@ var UI = (function () {
 
     return {
         init: init,
-        startGame: startGame
+        startGame: startGame,
+        showWin: showWin
     };
 
 })();

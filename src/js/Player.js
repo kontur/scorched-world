@@ -26,10 +26,16 @@ function Player(options) {
     this.fireButtonTimeout = null;
 
     this.life = 100;
+    this.id = null;
+    this.name = null;
 
 
     this.init = function () {
         console.log("Player.init()", this.options.color);
+
+        this.id = this.options.id;
+        this.name = this.options.name;
+
         var geometry = new THREE.IcosahedronGeometry(1, 0);
         var material = new THREE.MeshPhongMaterial({
             ambient: 0xffffff,
@@ -218,6 +224,7 @@ function Player(options) {
      * this player got hit
      */
     this.registerHit = function () {
+        console.log("Player.registerHit");
         this.life -= 100;
 
         if (this.life <= 0) {

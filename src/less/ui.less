@@ -37,16 +37,14 @@ html, body {
         background: rgba(255, 255, 255, 0.95);
         border: 3px solid @highlight1;
         display: block;
-        height: 15em;
         padding: 2em;
+        position: relative;
         margin: 7em auto;
         width: 25em;
+        z-index: 9;
 
         > div {
             display: none;
-        }
-
-        #start {
             text-align: center;
             h2 {
                 margin-bottom: 0.5em;
@@ -71,6 +69,10 @@ html, body {
             margin: 1em auto;
         }
     }
+}
+
+#hud {
+    z-index: 3;
 }
 
 #players {

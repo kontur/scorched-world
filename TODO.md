@@ -9,6 +9,7 @@
 -
 
 ### Improvement from crude initial implementations
+* camera control optionally with mouse
 * player controls for firing projectiles (more than just visual indicators as is atm)
 * player / AI visual distinction
 * AI mustn't shoot into immediate surrounding terrain walls (kill itself) > base random rotation on average face normal

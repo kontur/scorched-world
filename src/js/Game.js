@@ -38,6 +38,13 @@ var Game = (function () {
         console.log("----------------------------------");
         console.log("Game.nextTurn()", currentTurn, players[currentTurn].isHuman);
 
+        if (players[currentTurn].life <= 0) {
+            console.log("skip this player", players[currentTurn].name);
+            updateCurrentTurn();
+            nextTurn();
+            return;
+        }
+
         $(window).on("PROJECTILE_IMPACT", updateDamage);
         var pos = players[currentTurn].position.clone();
 
@@ -49,7 +56,6 @@ var Game = (function () {
 
         // TODO eventually store each player's own last camera rotation and set it here when their turn starts
         CameraManager.animateTo(pos, players[currentTurn].position, 0, CameraManager.getCameraDefaults().playerV);
-
 
         // When the player is a human, hand over controls until they have fired otherwise make AI player fire automatically
         if (players[currentTurn].isHuman) {
@@ -70,8 +76,6 @@ var Game = (function () {
         console.log("Game.updateDamage()");
         $(window).off("PROJECTILE_IMPACT", updateDamage);
 
-        players[currentTurn].registerHit();
-
         // check and collect the players that are alive still
         var alive = playersAlive();
 
@@ -82,15 +86,18 @@ var Game = (function () {
                 CameraManager.disableControls();
             }
 
-            currentTurn++;
-            if (currentTurn >= players.length) {
-                currentTurn = 0;
-            }
+            updateCurrentTurn();
 
             setTimeout(nextTurn, 1500);
         } else {
-            console.log("WIN FOR PLAYER ", alive[0]);
-            alert("WIN FOR PLAYER ", alive[0]);
+            UI.showWin(alive[0]);
+        }
+    }
+
+    function updateCurrentTurn() {
+        currentTurn++;
+        if (currentTurn >= players.length) {
+            currentTurn = 0;
         }
     }
 
