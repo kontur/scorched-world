@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
     <head>
-        <title>WIP</title>
+        <title>Scorched World</title>
         <link rel="stylesheet" href="assets/css/main.css">
         <link href="http://fonts.googleapis.com/css?family=Play:400,700" rel="stylesheet" type="text/css">
     </head>
@@ -9,7 +9,7 @@
     <body>
         <canvas id="gamecanvas"></canvas>
         <div id="ui">
-            <h1 id="heading">Scorched Earth</h1>
+            <h1 id="heading">Scorched World</h1>
             <div id="menus">
                 <div id="start">
                     <h2>Start a new game</h2>
@@ -57,8 +57,8 @@
 
         <script type="text/template" id="playerHUDTemplate">
             <tr class="playerDisplay">
-                <td><div class="player-life"><span>100</span> %</div></td>
-                <td>{{ name }}</td>
+                <td><div class="player-life" style="background-color: {{ color }};"><span>100</span></div></td>
+                <td><span style="color: {{ color }};">{{ name }}</span></td>
             </tr>
         </script>
 

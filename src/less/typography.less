@@ -1,9 +1,6 @@
-@highlight1: #0db0d3; // cyan
-@highlight2: #f39824; // orange
-@grey: #867666; // warm grey
-@lightGrey: #aaaaaa; // lighter grey
-@lightestGrey: #cccccc;
-
+/**
+ * Typographic styling and layout
+ */
 
 body {
     font-family: 'Play', sans-serif;
@@ -26,7 +23,6 @@ h1, h2, h3, h4, h5, h6 {
     text-transform: uppercase;
 }
 
-
 #heading {
     text-align: center;
 }
@@ -40,7 +36,9 @@ button.primary {
     text-align: center;
     text-transform: uppercase;
 
-    &[disabled] {
+    &[disabled],
+    &[disabled]:focus,
+    &[disabled]:hover {
         border: 2px solid @lightestGrey;
         background: @lightGrey;
         color: @lightestGrey;

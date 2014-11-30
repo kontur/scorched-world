@@ -1,9 +1,18 @@
+/**
+ * Main less file to compile with imports
+ */
 * {
   border: 0;
   outline: 0;
   margin: 0;
   padding: 0;
 }
+/**
+ * General variables used throughout the styling
+ */
+/**
+ * Typographic styling and layout
+ */
 body {
   font-family: 'Play', sans-serif;
 }
@@ -42,7 +51,9 @@ button.primary {
   text-align: center;
   text-transform: uppercase;
 }
-button.primary[disabled] {
+button.primary[disabled],
+button.primary[disabled]:focus,
+button.primary[disabled]:hover {
   border: 2px solid #cccccc;
   background: #aaaaaa;
   color: #cccccc;
@@ -54,6 +65,9 @@ button.primary:hover {
   color: #f39824;
   cursor: pointer;
 }
+/**
+ * Styling for the various aspects of the game UI
+ */
 html,
 body {
   overflow: hidden;
@@ -63,7 +77,7 @@ body {
 }
 #heading {
   position: absolute;
-  top: 1em;
+  top: 0.5em;
   width: 100%;
   z-index: 2;
 }
@@ -130,202 +144,6 @@ body {
 #players .playerDisplay .player-life {
   position: absolute;
   height: 2px;
-  background: red;
-  width: 100px;
-  top: 18px;
-}
-#players .playerDisplay .player-life span {
-  color: white;
-  position: absolute;
-  left: 0;
-  top: -10px;
-  font-size: 10px;
-}
-#players .playerDisplay td:last-child {
-  color: red;
-}
-button:hover {
-  background: white;
-}
-
-body {
-  font-family: 'Play', sans-serif;
-}
-button,
-select,
-option,
-input {
-  font: inherit;
-}
-em,
-strong,
-th {
-  font: inherit;
-}
-h1 {
-  color: #0db0d3;
-  font-weight: 700;
-}
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  text-transform: uppercase;
-}
-#heading {
-  text-align: center;
-}
-button.primary {
-  background: #f39824;
-  border: 2px solid #f39824;
-  color: white;
-  font-weight: 700;
-  padding: 0.5em 1em;
-  text-align: center;
-  text-transform: uppercase;
-}
-button.primary[disabled] {
-  border: 2px solid #cccccc;
-  background: #aaaaaa;
-  color: #cccccc;
-}
-button.primary:focus,
-button.primary:hover {
-  background: white;
-  border: 2px solid #f39824;
-  color: #f39824;
-  cursor: pointer;
-}
-
-body {
-  font-family: 'Play', sans-serif;
-}
-button,
-select,
-option,
-input {
-  font: inherit;
-}
-em,
-strong,
-th {
-  font: inherit;
-}
-h1 {
-  color: #0db0d3;
-  font-weight: 700;
-}
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  text-transform: uppercase;
-}
-#heading {
-  text-align: center;
-}
-button.primary {
-  background: #f39824;
-  border: 2px solid #f39824;
-  color: white;
-  font-weight: 700;
-  padding: 0.5em 1em;
-  text-align: center;
-  text-transform: uppercase;
-}
-button.primary[disabled] {
-  border: 2px solid #cccccc;
-  background: #aaaaaa;
-  color: #cccccc;
-}
-button.primary:focus,
-button.primary:hover {
-  background: white;
-  border: 2px solid #f39824;
-  color: #f39824;
-  cursor: pointer;
-}
-html,
-body {
-  overflow: hidden;
-}
-#gamecanvas {
-  z-index: 1;
-}
-#heading {
-  position: absolute;
-  top: 1em;
-  width: 100%;
-  z-index: 2;
-}
-#instructions {
-  position: absolute;
-  bottom: 1em;
-  width: 100%;
-  text-align: center;
-  z-index: 2;
-}
-#ui {
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  z-index: 10;
-}
-#ui #menus {
-  background: rgba(255, 255, 255, 0.95);
-  border: 3px solid #0db0d3;
-  display: block;
-  height: 15em;
-  padding: 2em;
-  margin: 7em auto;
-  width: 25em;
-}
-#ui #menus > div {
-  display: none;
-}
-#ui #menus #start {
-  text-align: center;
-}
-#ui #menus #start h2 {
-  margin-bottom: 0.5em;
-}
-#ui #menus #start p {
-  display: inline-block;
-}
-#ui #menus #start select {
-  display: inline-block;
-  border: 1px solid #867666;
-  border-radius: 0;
-  -webkit-border-radius: 0;
-}
-#ui #menus #start table {
-  display: none;
-  margin: 1em auto;
-}
-#ui #menus button.primary {
-  display: block;
-  margin: 1em auto;
-}
-#players {
-  position: absolute;
-  top: 5em;
-  left: 1em;
-}
-#players .playerDisplay td:first-child {
-  height: 30px;
-  position: relative;
-  width: 100px;
-}
-#players .playerDisplay .player-life {
-  position: absolute;
-  height: 2px;
-  background: red;
   width: 100px;
   top: 18px;
 }

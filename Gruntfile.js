@@ -67,7 +67,7 @@ module.exports = function (grunt) {
             dev: {
                 options: {},
                 files: {
-                    "web/assets/css/main.css": "src/less/*.less"
+                    "web/assets/css/main.css": "src/less/main.less"
                 }
             }
         },

@@ -1370,7 +1370,7 @@ Terrain = function() {
 
 var UI = (function () {
 
-    var playerColors = [0x00ff00, 0xff0000, 0xffff00, 0x00ffff];
+    var playerColors = ["#66d78b", "#1c5ed7", "#b0116f", "#ffd800"];
 
     var playerRowTemplate = Handlebars.compile($("#playerRowTemplate").html());
     var $playersTable = $("#start table");
@@ -1422,20 +1422,25 @@ var UI = (function () {
 
         $playersTable.children(".playerRow").each(function () {
             var $this = $(this),
-                playerName = $this.find("input[name=playerName]").val(),
+                options = {
+                    name: $this.find("input[name=playerName]").val(),
+                    color: playerColors[players.length]
+                },
                 p = null;
 
-            if (!playerName) {
-                playerName = "Mr. Random";
+            if (!options.name) {
+                options.name = "Mr. Random";
             }
 
             if ($this.find("select").val() == "human") {
-                p = new HumanPlayer({ color: playerColors[players.length], name: playerName });
+                p = new HumanPlayer(options);
             } else {
-                p = new AIPlayer({ color: playerColors[players.length], name: playerName });
+                p = new AIPlayer(options);
             }
 
-            $playersHUD.append(playerHUDTemplate({ name: playerName }));
+
+            //options.color = "" + options.color.toString(16);
+            $playersHUD.append(playerHUDTemplate(options));
             $(p).on("CHANGE_LIFE", updatePlayerLife);
             players.push(p);
 
