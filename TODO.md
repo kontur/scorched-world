@@ -29,4 +29,4 @@
 * App packaging for playing on mobile devices
 
 ## Bugs
-* Camera flickers and rotates wildly on game start animating to first player
+-

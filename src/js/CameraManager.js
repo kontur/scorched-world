@@ -72,7 +72,7 @@ var CameraManager = (function () {
         cameraDolly.add(cameraDollyHorizontal);
 
         setupCameraControls();
-        animateTo(new THREE.Vector3(0, 50, 0), new THREE.Vector3(0, 0, 0), Math.PI / 4, Math.PI / 4);
+        animateTo(new THREE.Vector3(0, 50, 0), new THREE.Vector3(0, 0, 0), 0, 0);
 
         // TODO refine this implementation; for now, this has too many unexpected odd camera truns in various edge cases
         // like for example when the projectile flies past the camera too close the camera spins too fast
