@@ -31,7 +31,7 @@
 
 -  **TODO** `(line 93)`  prevent multiple simultaneous projectiles in the air
 -  **TODO** `(line 94)`  projectile mass has no effect
--  **TODO** `(line 230)`  visually signify player having lost
+-  **TODO** `(line 232)`  visually signify player having lost
 
 ## src/js/Projectile.js
 

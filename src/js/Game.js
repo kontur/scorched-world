@@ -70,6 +70,8 @@ var Game = (function () {
         console.log("Game.updateDamage()");
         $(window).off("PROJECTILE_IMPACT", updateDamage);
 
+        players[currentTurn].registerHit();
+
         // check and collect the players that are alive still
         var alive = playersAlive();
 

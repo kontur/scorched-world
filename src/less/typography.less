@@ -1,0 +1,56 @@
+@highlight1: #0db0d3; // cyan
+@highlight2: #f39824; // orange
+@grey: #867666; // warm grey
+@lightGrey: #aaaaaa; // lighter grey
+@lightestGrey: #cccccc;
+
+
+body {
+    font-family: 'Play', sans-serif;
+}
+
+button, select, option, input {
+    font: inherit;
+}
+
+em, strong, th {
+    font: inherit;
+}
+
+h1 {
+    color: @highlight1;
+    font-weight: 700;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    text-transform: uppercase;
+}
+
+
+#heading {
+    text-align: center;
+}
+
+button.primary {
+    background: @highlight2;
+    border: 2px solid @highlight2;
+    color: white;
+    font-weight: 700;
+    padding: 0.5em 1em;
+    text-align: center;
+    text-transform: uppercase;
+
+    &[disabled] {
+        border: 2px solid @lightestGrey;
+        background: @lightGrey;
+        color: @lightestGrey;
+    }
+
+    &:focus,
+    &:hover {
+        background: white;
+        border: 2px solid @highlight2;
+        color: @highlight2;
+        cursor: pointer;
+    }
+}

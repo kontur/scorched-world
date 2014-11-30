@@ -3,13 +3,16 @@
     <head>
         <title>WIP</title>
         <link rel="stylesheet" href="assets/css/main.css">
+        <link href="http://fonts.googleapis.com/css?family=Play:400,700" rel="stylesheet" type="text/css">
     </head>
 
     <body>
         <canvas id="gamecanvas"></canvas>
         <div id="ui">
+            <h1 id="heading">Scorched Earth</h1>
             <div id="menus">
                 <div id="start">
+                    <h2>Start a new game</h2>
                     <p>How many players?</p>
                     <select name="numPlayers">
                         <option>select</option>
@@ -24,10 +27,19 @@
                             <th>Type</th>
                         </tr>
                     </table>
-                    <button id="ui-start-game">Start game</button>
+                    <button id="ui-start-game" class="primary" disabled>Start game</button>
                 </div>
                 <div id="winner">The winner is <span class="winner-name"></span>!</div>
             </div>
+            <div id="hud">
+                <div id="players">
+                    <table>
+                    </table>
+                </div>
+            </div>
+            <aside id="instructions">
+                <img src="assets/img/instructions.png" alt="Use 'a', 'd', 'w' and 's' keys to rotate the camera, arrow keys to aim, and space to fire">
+            </aside>
         </div>
 
 
@@ -39,6 +51,14 @@
                     <option value="human">human</option>
                     <option value="ai">computer</option>
                 </select></td>
+            </tr>
+        </script>
+
+
+        <script type="text/template" id="playerHUDTemplate">
+            <tr class="playerDisplay">
+                <td><div class="player-life"><span>100</span> %</div></td>
+                <td>{{ name }}</td>
             </tr>
         </script>
 

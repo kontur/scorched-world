@@ -1,4 +1,4 @@
-# TODOS (manually compiled list - see TODO-compiled.md for remarks left in the code implementations that need improvement)
+# TODOS (manually compiled list - see TODO-compiled.md for remarks left in the code for implementations that need improvement)
 
 ## Top level to-do's
 * basic UI for player controls
@@ -6,6 +6,7 @@
 * working logic for detecting a win in the game
 
 ## Important playability improvements
+-
 
 ### Improvement from crude initial implementations
 * player controls for firing projectiles (more than just visual indicators as is atm)

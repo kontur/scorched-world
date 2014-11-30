@@ -223,6 +223,8 @@ function Player(options) {
         if (this.life <= 0) {
             this.terminate();
         }
+
+        $(this).trigger("CHANGE_LIFE");
     };
 
 

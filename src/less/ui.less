@@ -1,3 +1,4 @@
+@import "typography.less";
 
 html, body {
     overflow: hidden;
@@ -5,6 +6,21 @@ html, body {
 
 #gamecanvas {
     z-index: 1;
+}
+
+#heading {
+    position: absolute;
+    top: 1em;
+    width: 100%;
+    z-index: 2;
+}
+
+#instructions {
+    position: absolute;
+    bottom: 1em;
+    width: 100%;
+    text-align: center;
+    z-index: 2;
 }
 
 #ui {
@@ -16,18 +32,76 @@ html, body {
     z-index: 10;
 
     #menus {
+        background: rgba(255, 255, 255, 0.95);
+        border: 3px solid @highlight1;
         display: block;
         height: 15em;
         padding: 2em;
-        margin: 5em auto;
-        width: 20em;
+        margin: 7em auto;
+        width: 25em;
+
         > div {
-            background: rgba(255, 255, 255, 0.85);
             display: none;
+        }
+
+        #start {
+            text-align: center;
+            h2 {
+                margin-bottom: 0.5em;
+            }
+            p {
+                display: inline-block;
+            }
+            select {
+                display: inline-block;
+                border: 1px solid @grey;
+                border-radius: 0;
+                -webkit-border-radius: 0;
+            }
+            table {
+                display: none;
+                margin: 1em auto;
+            }
+        }
+
+        button.primary {
+            display: block;
+            margin: 1em auto;
         }
     }
 }
 
+#players {
+    position: absolute;
+    top: 5em;
+    left: 1em;
+
+    .playerDisplay {
+        td:first-child {
+            height: 30px;
+            position: relative;
+            width: 100px;
+        }
+        .player-life {
+            position: absolute;
+            height: 2px;
+            background: red;
+            width: 100px;
+            top: 18px;
+
+            span {
+                color: white;
+                position: absolute;
+                left: 0;
+                top: -10px;
+                font-size: 10px;
+            }
+        }
+        td:last-child {
+            color: red;
+        }
+    }
+}
 
 button:hover {
     background: white;

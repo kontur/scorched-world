@@ -1,4 +1,4 @@
-/*!  - v - 2014-11-20
+/*!  - v - 2014-11-30
 * Copyright (c) 2014 Johannes Neumeier; Licensed  */
 var CameraManager = (function () {
 
@@ -415,6 +415,8 @@ var Game = (function () {
     function updateDamage() {
         console.log("Game.updateDamage()");
         $(window).off("PROJECTILE_IMPACT", updateDamage);
+
+        players[currentTurn].registerHit();
 
         // check and collect the players that are alive still
         var alive = playersAlive();
@@ -907,6 +909,8 @@ function Player(options) {
         if (this.life <= 0) {
             this.terminate();
         }
+
+        $(this).trigger("CHANGE_LIFE");
     };
 
 
@@ -1367,8 +1371,13 @@ Terrain = function() {
 var UI = (function () {
 
     var playerColors = [0x00ff00, 0xff0000, 0xffff00, 0x00ffff];
+
     var playerRowTemplate = Handlebars.compile($("#playerRowTemplate").html());
     var $playersTable = $("#start table");
+
+    var playerHUDTemplate = Handlebars.compile($("#playerHUDTemplate").html());
+    var $playersHUD = $("#hud table");
+
     var maxPlayers = 4;
 
 
@@ -1413,22 +1422,34 @@ var UI = (function () {
 
         $playersTable.children(".playerRow").each(function () {
             var $this = $(this),
-                playerName = $this.find("input[name=playerName]").val();
+                playerName = $this.find("input[name=playerName]").val(),
+                p = null;
 
             if (!playerName) {
                 playerName = "Mr. Random";
             }
 
             if ($this.find("select").val() == "human") {
-                players.push(new HumanPlayer({ color: playerColors[players.length], name: playerName }));
+                p = new HumanPlayer({ color: playerColors[players.length], name: playerName });
             } else {
-                players.push(new AIPlayer({ color: playerColors[players.length], name: playerName }));
+                p = new AIPlayer({ color: playerColors[players.length], name: playerName });
             }
+
+            $playersHUD.append(playerHUDTemplate({ name: playerName }));
+            $(p).on("CHANGE_LIFE", updatePlayerLife);
+            players.push(p);
+
         });
 
         hideMenu();
         Game.addPlayers(players);
         Game.start();
+        showHUD();
+    }
+
+
+    function updatePlayerLife(e) {
+        console.log("UI.updatePlayerLife", e);
     }
 
 
@@ -1439,6 +1460,8 @@ var UI = (function () {
      */
     function startUpdatePlayers(e) {
         var numPlayers = $(e.target).val();
+        $playersTable.show();
+        $("#start button").removeAttr("disabled");
 
         while ($playersTable.children(".playerRow").length < numPlayers) {
             var numRows = $playersTable.children(".playerRow").length;
@@ -1453,11 +1476,16 @@ var UI = (function () {
 
     function showMenu(menuId) {
         hideMenu();
+        $("#menus").fadeIn();
         $(menuId).show();
     }
 
     function hideMenu() {
-        $("#menus").children().hide();
+        $("#menus").hide().children().hide();
+    }
+
+    function showHUD() {
+        $("#hud").show();
     }
 
 
